@@ -112,5 +112,5 @@ object PureS3Client {
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
   def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
-    S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F](_))
+    S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F])
 }

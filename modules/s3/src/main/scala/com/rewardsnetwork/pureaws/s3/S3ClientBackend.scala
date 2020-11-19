@@ -8,14 +8,15 @@ import software.amazon.awssdk.services.s3.{S3Client, S3ClientBuilder, S3AsyncCli
 object S3ClientBackend {
 
   /** Builds an `S3Client` from the AWS v2 SDK, which operates synchronously.
+    * Prefer to use `PureS3Client` directly where possible.
     *
     * You can configure your client before it is created using the `configure` function parameter
     * if you want to set anything other than your region.
     *
-    * @param blocker A Cats Effect `Blocker`, used to create
-    * @param awsRegion
-    * @param configure
-    * @return
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you will be operating in.
+    * @param configure A function to configure your client before it is built and returned to you.
+    * @return A configured `S3Client` as a `Resource` that will close itself after use.
     */
   def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region)(
       configure: S3ClientBuilder => S3ClientBuilder = identity
@@ -24,7 +25,17 @@ object S3ClientBackend {
       configure(S3Client.builder().region(awsRegion)).build()
     })
 
-  /** Builds an AWS S3 Client (Async) with the specified region */
+  /** Builds an `S3AsyncClient` from the AWS v2 SDK, which operates asynchronously.
+    * Prefer to use `PureS3Client` directly where possible.
+    *
+    * You can configure your client before it is created using the `configure` function parameter
+    * if you want to set anything other than your region.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you will be operating in.
+    * @param configure A function to configure your client before it is built and returned to you.
+    * @return A configured `S3AsyncClient` as a `Resource` that will close itself after use.
+    */
   def async[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region)(
       configure: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
   ): Resource[F, S3AsyncClient] =
