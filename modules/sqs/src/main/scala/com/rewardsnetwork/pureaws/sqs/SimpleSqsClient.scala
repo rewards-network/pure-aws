@@ -1,8 +1,9 @@
 package com.rewardsnetwork.pureaws.sqs
 
 import cats.implicits._
-import cats.effect.Sync
+import cats.effect._
 import fs2.Stream
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.model._
 
 import scala.jdk.CollectionConverters._
@@ -138,4 +139,22 @@ object SimpleSqsClient {
       }
 
     }
+
+  /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `SimpleSqsClient` instance using a synchronous backend.
+    */
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region) =
+    PureSqsClient.sync[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `SimpleSqsClient` instance using an asynchronous backend.
+    */
+  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+    PureSqsClient.async[F](blocker, awsRegion).map(apply[F])
 }

@@ -1,9 +1,10 @@
 package com.rewardsnetwork.pureaws.sqs.refined
 
-import cats.effect.Sync
+import cats.effect._
 import com.rewardsnetwork.pureaws.sqs._
 import fs2.Stream
 import eu.timepit.refined.auto._
+import software.amazon.awssdk.regions.Region
 
 import scala.jdk.CollectionConverters._
 
@@ -113,4 +114,22 @@ object RefinedSqsClient {
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
 
     }
+
+  /** Constructs a `RefinedSqsClient` using an underlying synchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `RefinedSqsClient` instance using a synchronous backend.
+    */
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, region: Region) =
+    PureSqsClient.sync[F](blocker, region).map(apply[F])
+
+  /** Constructs a `RefinedSqsClient` using an underlying asynchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `RefinedSqsClient` instance using an asynchronous backend.
+    */
+  def async[F[_]: Async: ContextShift](blocker: Blocker, region: Region) =
+    PureSqsClient.async[F](blocker, region).map(apply[F])
 }

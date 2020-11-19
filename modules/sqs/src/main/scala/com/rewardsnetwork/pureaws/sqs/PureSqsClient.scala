@@ -5,6 +5,7 @@ import java.util.concurrent.CompletableFuture
 import cats.effect._
 import fs2.Stream
 import monix.catnap.syntax._
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.{SqsClient, SqsAsyncClient}
 import software.amazon.awssdk.services.sqs.model._
 
@@ -134,4 +135,22 @@ object PureSqsClient {
     }
 
   }
+
+  /** Creates a `PureSqsClient` using a synchronous backend with default settings.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `Resource` containing a `PureSqsClient` using a synchronous backend.
+    */
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region) =
+    SqsClientBackend.sync[F](blocker, awsRegion)().map(apply[F](blocker, _))
+
+  /** Creates a `PureSqsClient` using an asynchronous backend with default settings.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
+    */
+  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+    SqsClientBackend.async[F](blocker, awsRegion)().map(apply[F])
 }
