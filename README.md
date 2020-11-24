@@ -8,10 +8,18 @@ Currently includes the following modules, with more to come:
 * `pure-aws-sqs`: Basic and simplified SQS access
 * `pure-aws-sqs-refined`: Builds on top of `fs2-sqs` with `refined` integration for type-safe method parameters.
 
-## Install
+## Setup
+**Package is not published yet**. Once it is published, you will be able to add this dependency to your project as follows.
 ```
 libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 ```
+
+## License
+This project is licensed under the Apache License V2.0.
+
+Copyright 2020 Rewards Network Establishment Services.
+
+Please see the LICENSE in this repository for more information.
 
 ## Usage
 The libraries in this repository follow a general architecture pattern you should be aware of.
