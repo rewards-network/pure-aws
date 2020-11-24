@@ -6,7 +6,7 @@ Currently includes the following modules, with more to come:
 * `pure-aws-s3`: S3 file sources and sinks
 * `pure-aws-s3-testing`: Test helpers to ensure you're using the S3 clients correctly
 * `pure-aws-sqs`: Basic and simplified SQS access
-* `pure-aws-sqs-refined`: Builds on top of `fs2-sqs` with `refined` integration for type-safe method parameters.
+* `pure-aws-sqs-refined`: Builds on top of `pure-aws-sqs` with `refined` integration for type-safe method parameters.
 
 ## Setup
 **Package is not published yet**. Once it is published, you will be able to add this dependency to your project as follows.
