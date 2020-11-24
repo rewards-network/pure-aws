@@ -1,12 +1,12 @@
 //Core deps
-val amazonV = "2.15.29"
+val amazonV = "2.15.35"
 val catsV = "2.2.0"
 val catsEffectV = "2.2.0"
-val fs2V = "2.4.5"
+val fs2V = "2.4.6"
 val log4catsV = "1.1.1"
 val refinedV = "0.9.18"
 val monixV = "3.3.0"
-val collectionCompatV = "2.2.0"
+val collectionCompatV = "2.3.0"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
 val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
@@ -38,7 +38,7 @@ val scalatestPlusScalacheck =
 val flexmark = "com.vladsch.flexmark" % "flexmark-all" % flexmarkV % "test"
 
 //Scala versions supported
-val scala213 = "2.13.3"
+val scala213 = "2.13.4"
 val scala212 = "2.12.12"
 
 val commonSettings = Seq(
