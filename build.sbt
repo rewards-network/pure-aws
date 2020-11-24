@@ -41,14 +41,25 @@ val flexmark = "com.vladsch.flexmark" % "flexmark-all" % flexmarkV % "test"
 val scala213 = "2.13.4"
 val scala212 = "2.12.12"
 
+// Project setup
+inThisBuild(
+  List(
+    organization := "com.rewardsnetwork",
+    developers := List(
+      Developer("sloshy", "Ryan Peters", "rpeters@rewardsnetwork.com", url("https://github.com/sloshy"))
+    ),
+    homepage := Some(url("https://github.com/rewards-network/pure-aws")),
+    licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
+    githubWorkflowJavaVersions := Seq("adopt@1.11"),
+    githubWorkflowTargetTags ++= Seq("v*"),
+    githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
+    githubWorkflowPublish := Seq(WorkflowStep.Sbt(List("ci-release"))),
+    scalaVersion := scala213,
+    crossScalaVersions := Seq(scala213, scala212)
+  )
+)
+
 val commonSettings = Seq(
-  scalaVersion := scala213,
-  crossScalaVersions := Seq(scala213, scala212),
-  organization := "com.rewardsnetwork",
-  testOptions in Test ++= Seq(
-    Tests.Argument(TestFrameworks.ScalaTest, "-o"),
-    Tests.Argument(TestFrameworks.ScalaTest, "-h", "target/test/test-reports")
-  ),
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % betterMonadicForV)
 )
 
