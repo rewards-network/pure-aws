@@ -114,7 +114,18 @@ Stream.resource(fileSourceResource).flatMap { source =>
   //Get an object's metadata and a stream of bytes
   val metadataAndByteStream = source.readObjectWithMetadata("myBucket", "myKey") //IO[(Map[String, String], Stream[IO, Byte])]
 
-  ???
+  metadataAndByteStream.flatMap { case (metadata, stream) =>
+    val metadataKeys = metadata.keys.toList.mkString(", ")
+    val logMetadataKeys = IO(println(s"Metadata keys available: $metadataKeys"))
+
+    val getLines = stream
+      .through(fs2.text.decodeUtf8[IO])
+      .through(fs2.text.lines[IO])
+      .compile
+      .toList
+
+    logMetadataKeys >> getLines
+  } //IO[List[String]]
 }
 ```
 
