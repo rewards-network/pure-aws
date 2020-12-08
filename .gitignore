@@ -6,3 +6,4 @@
 .bloop/
 metals.sbt
 target/
+node_modules/
