@@ -63,6 +63,17 @@ val commonSettings = Seq(
   addCompilerPlugin("com.olegpy" %% "better-monadic-for" % betterMonadicForV)
 )
 
+lazy val docs = (project in file("pure-aws-docs"))
+  .settings(
+    mdocVariables := Map(
+      "VERSION" -> version.value
+    ),
+    scalacOptions ~= filterConsoleScalacOptions,
+    publish / skip := true
+  )
+  .dependsOn(core, sqs, sqsRefined, s3, s3Testing)
+  .enablePlugins(MdocPlugin)
+
 lazy val root = (project in file("."))
   .settings(
     commonSettings,
