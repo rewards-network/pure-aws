@@ -22,7 +22,7 @@ val collectionCompat =
 
 //Test/build deps
 val scalaTestV = "3.2.3"
-val scalaCheckV = "1.15.1"
+val scalaCheckV = "1.15.2"
 val scalaTestScalacheckV = "3.2.2.0"
 val betterMonadicForV = "0.3.1"
 val flexmarkV = "0.35.10" // scala-steward:off
