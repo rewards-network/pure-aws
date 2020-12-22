@@ -9,7 +9,8 @@ Currently includes the following modules, with more to come:
 * `pure-aws-sqs-refined`: Builds on top of `pure-aws-sqs` with `refined` integration for type-safe method parameters.
 
 ## Setup
-**Package is not published yet**. Once it is published, you will be able to add this dependency to your project as follows.
+This library is published for both Scala 2.12 and 2.13.
+Scala 3 support will be coming, but is dependent on upstream projects also supporting it.
 ```
 libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 ```
