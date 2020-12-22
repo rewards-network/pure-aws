@@ -73,11 +73,11 @@ val opsResource: Resource[IO, S3ObjectOps[IO]] = Blocker[IO].flatMap(S3ObjectOps
 opsResource.use { ops =>
 
   //Define copy or delete operations manually...
-  val copy = ops.copyFile("oldBucket", "oldKey", "newBucket", "newKey")
-  val delete = ops.deleteFile("oldBucket", "oldKey")
+  val copy = ops.copy("oldBucket", "oldKey", "newBucket", "newKey")
+  val delete = ops.delete("oldBucket", "oldKey")
   
   //Or use a simplified version as `move` which copies and deletes in sequence
-  val move = ops.moveFile("oldBucket", "oldKey", "newBucket", "newKey")
+  val move = ops.move("oldBucket", "oldKey", "newBucket", "newKey")
 
   move
 } //IO[Unit]
@@ -91,7 +91,7 @@ import com.rewardsnetwork.pureaws.S3Sink
 
 val sinkResource: Resource[IO, S3Sink[IO]] = Blocker[IO].flatMap(S3Sink.async[IO](_, region))
 
-fileSinkResource.use { sink =>
+sinkResource.use { sink =>
   Stream("hello", "world", "and all who inhabit it")
     .through(fs2.text.encodeUtf8)
     .through(sink.writeText(bucket, path)) //Can also write raw bytes, and set custom content type
@@ -108,7 +108,7 @@ import com.rewardsnetwork.pureaws.S3Source
 
 val sourceResource: Resource[IO, S3Source[IO]] = Blocker[IO].flatMap(S3Source.async[IO](_, region))
 
-Stream.resource(fileSourceResource).flatMap { source =>
+Stream.resource(sourceResource).flatMap { source =>
   //Stream bytes from an object
   val byteStream = source.readObject("myBucket", "myKey") //Stream[IO, Byte]
   
@@ -159,7 +159,7 @@ Presently there is just `pureaws-s3-testing`.
 
 ### S3 Testing
 There is a small backend for testing the simplified clients, such as `S3Sink` and `S3Source`, available as `S3TestingBackend.inMemory`.
-It is designed to be used with the `Test` clients, and they will throw exceptions for certain common operations such as when you try to get a file that does not exist.
+It is designed to be used with the `Test` clients, and they will throw exceptions for certain common operations such as when you try to get an object that does not exist.
 
 All components are available in the `testing` package in `pureaws-s3-testing`.
 
@@ -184,9 +184,9 @@ val program = S3TestingBackend.inMemory[IO].flatMap { backend =>
   val readText = source
     .readObject("bucket", "key")
     .through(fs2.text.decodeUtf8)
-    .stdOutLines //prints out the file contents
+    .stdOutLines //prints out the object contents
 
-  (writeFile >> readText).compile.drain
+  (writeText >> readText).compile.drain
 }
 
 program.unsafeRunSync() //Hello world!
