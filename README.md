@@ -19,9 +19,9 @@ libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 
 ## API Docs
 * [S3](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/s3/index.html)
-* [S3 Testing](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/s3/testing/index.html)
-* [SQS](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/sqs/index.html)
-* [SQS Refined](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/sqs/refined/index.html)
+* [S3 Testing](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3-testing_2.13/latest/com/rewardsnetwork/pureaws/s3/testing/index.html)
+* [SQS](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-sqs_2.13/latest/com/rewardsnetwork/pureaws/sqs/index.html)
+* [SQS Refined](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-sqs-refined_2.13/latest/com/rewardsnetwork/pureaws/sqs/refined/index.html)
 
 ## License
 Copyright 2020 Rewards Network Establishment Services
