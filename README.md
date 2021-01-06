@@ -17,6 +17,12 @@ Scala 3 support will be coming, but is dependent on upstream projects also suppo
 libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 ```
 
+## API Docs
+* [S3](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/s3/index.html)
+* [S3 Testing](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/s3/testing/index.html)
+* [SQS](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/sqs/index.html)
+* [SQS Refined](https://javadoc.io/doc/com.rewardsnetwork/pure-aws-s3_2.13/latest/com/rewardsnetwork/pureaws/sqs/refined/index.html)
+
 ## License
 Copyright 2020 Rewards Network Establishment Services
 
