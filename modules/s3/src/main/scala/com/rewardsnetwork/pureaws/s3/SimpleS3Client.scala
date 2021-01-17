@@ -37,6 +37,6 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region) =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
 }
