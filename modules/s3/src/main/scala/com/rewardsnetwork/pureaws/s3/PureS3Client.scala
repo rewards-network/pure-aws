@@ -5,6 +5,7 @@ import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
 import cats.effect._
+import com.rewardsnetwork.pureaws.Fs2AsyncResponseTransformer
 import fs2.Stream
 import monix.catnap.syntax._
 import software.amazon.awssdk.core.ResponseBytes
@@ -18,6 +19,35 @@ import software.amazon.awssdk.services.s3.model._
   * Supports a common subset of operations between sync and async client backends.
   */
 trait PureS3Client[F[_]] {
+
+  /** Abort an in-progress multipart upload.
+    *
+    * @param r An `AbortMultipartUploadRequest` with the bucket, key, and upload ID of your multipart upload.
+    * @return An `AbortMultipartUploadResponse` indicating the status of your request.
+    */
+  def abortMultipartUpload(r: AbortMultipartUploadRequest): F[AbortMultipartUploadResponse]
+
+  /** Complete a multipart upload.
+    *
+    * @param r A `CompleteMultipartUploadRequest` containing the bucket, key, and upload ID of the multipart upload you wish to complete.
+    * @return A `CompleteMultipartUploadResponse` indicating the status of your request.
+    */
+  def completeMultipartUpload(r: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse]
+
+  /** Signal the intent to start a multipart upload.
+    *
+    * @param r A `CreateMultipartUploadRequest` with the bucket, key, and other parameters for your object.
+    * @return A `CreateMultipartUploadResponse` indicating the status of your request.
+    */
+  def createMultipartUpload(r: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse]
+
+  /** Upload a new part to an existing multipart upload.
+    *
+    * @param r An `UploadPartRequest` containing the bucket, key, and upload ID of the part you are uploading.
+    * @param body A `ByteBuffer` of the contents of the part you are uploading.
+    * @return An `UploadPartResponse` indicating the status of your request.
+    */
+  def uploadPart(r: UploadPartRequest, body: ByteBuffer): F[UploadPartResponse]
 
   /** Return an FS2 Stream of the object requested.
     * Result is raw streaming from the HTTP response as it comes in.
@@ -67,6 +97,22 @@ object PureS3Client {
     new PureS3Client[F] {
       private def block[A](f: => A): F[A] = blocker.blockOn(Sync[F].delay(f))
 
+      def abortMultipartUpload(r: AbortMultipartUploadRequest): F[AbortMultipartUploadResponse] = {
+        block(client.abortMultipartUpload(r))
+      }
+
+      def completeMultipartUpload(r: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse] = {
+        block(client.completeMultipartUpload(r))
+      }
+
+      def createMultipartUpload(r: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse] = {
+        block(client.createMultipartUpload(r))
+      }
+
+      def uploadPart(r: UploadPartRequest, body: ByteBuffer): F[UploadPartResponse] = {
+        block(client.uploadPart(r, RequestBody.fromByteBuffer(body)))
+      }
+
       def getObjectStream(r: GetObjectRequest): Stream[F, Byte] = {
         val res: F[InputStream] = block(client.getObject(r))
         fs2.io.readInputStream(res, 4096, blocker, closeAfterUse = true)
@@ -95,6 +141,22 @@ object PureS3Client {
   def apply[F[_]: ConcurrentEffect](client: S3AsyncClient) =
     new PureS3Client[F] {
       private def lift[A](f: => CompletableFuture[A]): F[A] = Sync[F].delay(f).futureLift
+
+      def abortMultipartUpload(r: AbortMultipartUploadRequest): F[AbortMultipartUploadResponse] = {
+        lift(client.abortMultipartUpload(r))
+      }
+
+      def completeMultipartUpload(r: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse] = {
+        lift(client.completeMultipartUpload(r))
+      }
+
+      def createMultipartUpload(r: CreateMultipartUploadRequest): F[CreateMultipartUploadResponse] = {
+        lift(client.createMultipartUpload(r))
+      }
+
+      def uploadPart(r: UploadPartRequest, body: ByteBuffer): F[UploadPartResponse] = {
+        lift(client.uploadPart(r, AsyncRequestBody.fromByteBuffer(body)))
+      }
 
       def getObjectStream(r: GetObjectRequest): Stream[F, Byte] =
         Stream
