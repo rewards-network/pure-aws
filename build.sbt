@@ -12,6 +12,7 @@ val catsCore = "org.typelevel" %% "cats-core" % catsV
 val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
 val fs2Core = "co.fs2" %% "fs2-core" % fs2V
 val fs2Io = "co.fs2" %% "fs2-io" % fs2V
+val fs2ReactiveStreams = "co.fs2" %% "fs2-reactive-streams" % fs2V
 val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % log4catsV
 val awsSQS = "software.amazon.awssdk" % "sqs" % amazonV
 val awsS3 = "software.amazon.awssdk" % "s3" % amazonV
@@ -131,6 +132,7 @@ lazy val s3 = (project in file("modules/s3"))
       catsCore,
       catsEffect,
       fs2Io,
+      fs2ReactiveStreams,
       log4catsCore,
       awsS3,
       monixCatnap,
