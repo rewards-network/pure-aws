@@ -21,9 +21,9 @@ trait S3Sink[F[_]] {
     *
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
-    * @return An FS2 `Pipe` for writing bytes to this new object.
+    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
-  def writeText(bucket: String, key: String): Pipe[F, Byte, Unit]
+  def writeText(bucket: String, key: String): Pipe[F, Byte, String]
 
   /** Write the stream of bytes to an object at the specified path in multiple parts.
     * Content type is assumed to be "text/plain"
@@ -37,9 +37,9 @@ trait S3Sink[F[_]] {
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
     * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
-    * @return An FS2 `Pipe` for writing bytes to this new object.
+    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
-  def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): Pipe[F, Byte, Unit]
+  def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): Pipe[F, Byte, String]
 
   /** Write the stream of bytes to an object at the specified path.
     *
@@ -49,9 +49,9 @@ trait S3Sink[F[_]] {
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
     * @param contentType The desired content type of the object being uploaded.
-    * @return An FS2 `Pipe` for writing bytes to this new object.
+    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
-  def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, Unit]
+  def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, String]
 
   /** Write the stream of bytes to an object at the specified path in multiple parts.
     * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
@@ -64,14 +64,14 @@ trait S3Sink[F[_]] {
     * @param key The key of the object you are uploading to.
     * @param contentType The desired content type of the object being uploaded.
     * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
-    * @return An FS2 `Pipe` for writing bytes to this new object.
+    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
   def writeBytesMultipart(
       bucket: String,
       key: String,
       contentType: String,
       partSizeBytes: Int = 5120
-  ): Pipe[F, Byte, Unit]
+  ): Pipe[F, Byte, String]
 }
 
 object S3Sink {
@@ -80,7 +80,7 @@ object S3Sink {
     */
   def apply[F[_]](client: PureS3Client[F])(implicit F: ApplicativeError[F, Throwable]): S3Sink[F] = {
     new S3Sink[F] {
-      def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, Unit] = { s =>
+      def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, String] = { s =>
         s.chunkAll
           .map(_.toByteBuffer)
           .evalMap { bytes =>
@@ -93,15 +93,7 @@ object S3Sink {
 
             client.putObject(req, bytes)
           }
-          .flatMap { res =>
-            val statusCode = res.sdkHttpResponse().statusCode()
-            val statusText = res.sdkHttpResponse().statusText().orElse("")
-            if (statusCode >= 300 || statusCode < 200) {
-              Stream.raiseError[F](new Exception(s"Status code is $statusCode for uploading object ($statusText)"))
-            } else {
-              Stream.empty
-            }
-          }
+          .map(_.eTag)
       }
 
       def writeBytesMultipart(
@@ -109,7 +101,7 @@ object S3Sink {
           key: String,
           contentType: String,
           partSizeBytes: Int = 5120
-      ): Pipe[F, Byte, Unit] = { s =>
+      ): Pipe[F, Byte, String] = { s =>
         val partNumStream = Stream.iterate(1)(_ + 1)
         val createMultipartReq =
           CreateMultipartUploadRequest.builder.bucket(bucket).key(key).contentType(contentType).build
@@ -143,19 +135,21 @@ object S3Sink {
               .fold(List.empty[CompletedPart])(_ :+ _)
               .map(completeUploadReq)
               .evalMap(client.completeMultipartUpload)
+              .map(_.eTag)
               .handleErrorWith { e =>
                 val abortReq = AbortMultipartUploadRequest.builder.bucket(bucket).key(key).uploadId(uploadId).build
                 Stream
-                  .eval(client.abortMultipartUpload(abortReq) *> ApplicativeError[F, Throwable].raiseError[String](e))
+                  .eval(
+                    client.abortMultipartUpload(abortReq) *> ApplicativeError[F, Throwable].raiseError(e)
+                  )
               }
-              .as(())
           }
         }
       }
 
-      def writeText(bucket: String, key: String): fs2.Pipe[F, Byte, Unit] = writeBytes(bucket, key, "text/plain")
+      def writeText(bucket: String, key: String): fs2.Pipe[F, Byte, String] = writeBytes(bucket, key, "text/plain")
 
-      def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): fs2.Pipe[F, Byte, Unit] =
+      def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): fs2.Pipe[F, Byte, String] =
         writeBytesMultipart(bucket, key, "text/plain", partSizeBytes)
     }
   }
