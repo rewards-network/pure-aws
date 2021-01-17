@@ -6,8 +6,8 @@ import java.security.MessageDigest
 import cats.ApplicativeError
 import cats.effect._
 import fs2.{Pipe, Stream}
-import software.amazon.awssdk.services.s3.model.{PutObjectResponse, PutObjectRequest}
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model._
 
 /** A helper for uploading S3 objects using FS2. */
 trait S3Sink[F[_]] {
@@ -16,7 +16,7 @@ trait S3Sink[F[_]] {
     * Content type is assumed to be "text/plain".
     *
     * The bytes are uploaded all at once, and buffered in-memory.
-    * For larger objects, consider doing a multipart upload.
+    * For large objects on the order of several MiB, consider doing a multipart upload.
     *
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
@@ -24,9 +24,24 @@ trait S3Sink[F[_]] {
     */
   def writeText(bucket: String, key: String): Pipe[F, Byte, Unit]
 
+  /** Write the stream of bytes to an object at the specified path in multiple parts.
+    * Content type is assumed to be "text/plain"
+    *
+    * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
+    * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
+    * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+    *
+    * @param bucket The bucket of the object you are uploading to.
+    * @param key The key of the object you are uploading to.
+    * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
+    * @return An FS2 `Pipe` for writing bytes to this new object.
+    */
+  def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): Pipe[F, Byte, Unit]
+
   /** Write the stream of bytes to an object at the specified path.
+    *
     * The bytes are uploaded all at once, and buffered in-memory.
-    * For larger objects, consider doing a multipart upload.
+    * For large objects on the order of several MiB, consider doing a multipart upload.
     *
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
@@ -34,6 +49,24 @@ trait S3Sink[F[_]] {
     * @return An FS2 `Pipe` for writing bytes to this new object.
     */
   def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, Unit]
+
+  /** Write the stream of bytes to an object at the specified path in multiple parts.
+    * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
+    * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
+    * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+    *
+    * @param bucket The bucket of the object you are uploading to.
+    * @param key The key of the object you are uploading to.
+    * @param contentType The desired content type of the object being uploaded.
+    * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
+    * @return An FS2 `Pipe` for writing bytes to this new object.
+    */
+  def writeBytesMultipart(
+      bucket: String,
+      key: String,
+      contentType: String,
+      partSizeBytes: Int = 5120
+  ): Pipe[F, Byte, Unit]
 }
 
 object S3Sink {
@@ -41,15 +74,16 @@ object S3Sink {
   /** Creates a new `S3Sink` given an existing `PureS3Client`.
     */
   def apply[F[_]](client: PureS3Client[F])(implicit F: ApplicativeError[F, Throwable]): S3Sink[F] = {
+    def md5String(bytes: Array[Byte]) =
+      scodec.bits.ByteVector(MessageDigest.getInstance("MD5").digest(bytes)).toBase64
+
     //Helper function to prevent code drifting too far to the right
     def putObj(bucket: String, key: String, bytes: ByteBuffer, contentType: String): F[PutObjectResponse] = {
-      val md5 = MessageDigest.getInstance("MD5").digest(bytes.array)
-      val md5String = scodec.bits.ByteVector(md5).toBase64
       val req = PutObjectRequest.builder
         .bucket(bucket)
         .key(key)
         .contentType(contentType)
-        .contentMD5(md5String)
+        .contentMD5(md5String(bytes.array))
         .build
 
       client.putObject(
@@ -76,7 +110,54 @@ object S3Sink {
           }
       }
 
+      def writeBytesMultipart(
+          bucket: String,
+          key: String,
+          contentType: String,
+          partSizeBytes: Int = 5120
+      ): Pipe[F, Byte, Unit] = { s =>
+        val partNumStream = Stream.iterate(1)(_ + 1)
+        val createMultipartReq =
+          CreateMultipartUploadRequest.builder.bucket(bucket).key(key).contentType(contentType).build
+
+        def uploadPartReq(bytes: ByteBuffer, partNumber: Int, uploadId: String) =
+          UploadPartRequest
+            .builder()
+            .bucket(bucket)
+            .key(key)
+            .uploadId(uploadId)
+            .partNumber(partNumber)
+            .contentMD5(md5String(bytes.array))
+            .build()
+
+        def completedPart(etag: String, partNumber: Int) = CompletedPart.builder.eTag(etag).partNumber(partNumber).build
+
+        Stream.eval(client.createMultipartUpload(createMultipartReq)).flatMap { res =>
+          val uploadId = res.uploadId
+          def completeUploadReq(parts: List[CompletedPart]) =
+            CompleteMultipartUploadRequest.builder
+              .bucket(bucket)
+              .key(key)
+              .uploadId(uploadId)
+              .multipartUpload(CompletedMultipartUpload.builder.parts(parts: _*).build)
+              .build
+
+          s.chunkN(partSizeBytes).map(_.toByteBuffer).zip(partNumStream).flatMap { case (bytes, partNum) =>
+            Stream
+              .eval(client.uploadPart(uploadPartReq(bytes, partNum, uploadId), bytes))
+              .map(partRes => completedPart(partRes.eTag, partNum))
+              .fold(List.empty[CompletedPart])(_ :+ _)
+              .map(completeUploadReq)
+              .evalMap(client.completeMultipartUpload)
+              .as(())
+          }
+        }
+      }
+
       def writeText(bucket: String, key: String): fs2.Pipe[F, Byte, Unit] = writeBytes(bucket, key, "text/plain")
+
+      def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): fs2.Pipe[F, Byte, Unit] =
+        writeBytesMultipart(bucket, key, "text/plain", partSizeBytes)
     }
   }
 
