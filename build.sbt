@@ -14,6 +14,7 @@ val fs2Core = "co.fs2" %% "fs2-core" % fs2V
 val fs2Io = "co.fs2" %% "fs2-io" % fs2V
 val fs2ReactiveStreams = "co.fs2" %% "fs2-reactive-streams" % fs2V
 val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % log4catsV
+val awsSdkCore = "software.amazon.awssdk" % "sdk-core" % amazonV
 val awsSQS = "software.amazon.awssdk" % "sqs" % amazonV
 val awsS3 = "software.amazon.awssdk" % "s3" % amazonV
 val refined = "eu.timepit" %% "refined" % refinedV
@@ -86,7 +87,17 @@ lazy val core = (project in file("modules/core"))
     commonSettings,
     name := "pure-aws-core",
     libraryDependencies ++= Seq(
-      collectionCompat
+      awsSdkCore,
+      catsCore,
+      catsEffect,
+      collectionCompat,
+      fs2Core,
+      fs2ReactiveStreams,
+      //Test deps
+      scalatest,
+      scalacheck,
+      scalatestPlusScalacheck,
+      flexmark
     )
   )
 
@@ -96,22 +107,15 @@ lazy val sqs = (project in file("modules/sqs"))
     name := "pure-aws-sqs",
     libraryDependencies ++= Seq(
       //Core deps
-      catsCore,
-      catsEffect,
-      fs2Core,
-      log4catsCore,
       awsSQS,
+      log4catsCore,
       monixCatnap,
       //Test deps
       catsEffectLaws,
-      log4catsTesting,
-      scalatest,
-      scalacheck,
-      scalatestPlusScalacheck,
-      flexmark
+      log4catsTesting
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val sqsRefined = (project in file("modules/sqs-refined"))
   .settings(
@@ -121,7 +125,7 @@ lazy val sqsRefined = (project in file("modules/sqs-refined"))
       refined
     )
   )
-  .dependsOn(sqs)
+  .dependsOn(sqs % "compile->compile;test->test")
 
 lazy val s3 = (project in file("modules/s3"))
   .settings(
@@ -129,23 +133,16 @@ lazy val s3 = (project in file("modules/s3"))
     name := "pure-aws-s3",
     libraryDependencies ++= Seq(
       //Core deps
-      catsCore,
-      catsEffect,
-      fs2Io,
-      fs2ReactiveStreams,
-      log4catsCore,
       awsS3,
+      fs2Io,
+      log4catsCore,
       monixCatnap,
       //Test deps
       catsEffectLaws,
-      log4catsTesting,
-      scalatest,
-      scalacheck,
-      scalatestPlusScalacheck,
-      flexmark
+      log4catsTesting
     )
   )
-  .dependsOn(core)
+  .dependsOn(core % "compile->compile;test->test")
 
 lazy val s3Testing = (project in file("modules/s3-testing"))
   .settings(
