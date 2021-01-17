@@ -1,9 +1,11 @@
 package com.rewardsnetwork.pureaws.s3
 
+import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
 import cats.effect._
+import fs2.Stream
 import monix.catnap.syntax._
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
@@ -17,7 +19,13 @@ import software.amazon.awssdk.services.s3.model._
   */
 trait PureS3Client[F[_]] {
 
-  /** Gets a requested object as raw bytes.
+  /** Return an FS2 Stream of the object requested.
+    * Result is raw streaming from the HTTP response as it comes in.
+    * Chunks are 4096 bytes for the sync backend, and the size of the SDK internal byte buffers for the async backend.
+    */
+  def getObjectStream(r: GetObjectRequest): Stream[F, Byte]
+
+  /** Gets a requested object as raw bytes, fetched at once.
     *
     * @param r A `GetObjectRequest` with the bucket, key, and other parameters for your object.
     * @return `ResponseBytes` of your object if successful along with a `GetObjectResponse` indicating your response status.
@@ -59,8 +67,14 @@ object PureS3Client {
     new PureS3Client[F] {
       private def block[A](f: => A): F[A] = blocker.blockOn(Sync[F].delay(f))
 
-      def getObjectBytes(r: GetObjectRequest): F[ResponseBytes[GetObjectResponse]] =
+      def getObjectStream(r: GetObjectRequest): Stream[F, Byte] = {
+        val res: F[InputStream] = block(client.getObject(r))
+        fs2.io.readInputStream(res, 4096, blocker, closeAfterUse = true)
+      }
+
+      def getObjectBytes(r: GetObjectRequest): F[ResponseBytes[GetObjectResponse]] = {
         block(client.getObjectAsBytes(r))
+      }
 
       def putObject(r: PutObjectRequest, body: ByteBuffer): F[PutObjectResponse] =
         block(client.putObject(r, RequestBody.fromByteBuffer(body)))
@@ -78,9 +92,17 @@ object PureS3Client {
     * @param client An asynchronous `S3AsyncClient` directly from the AWS SDK.
     * @return A shiny new `PureS3Client` with an asynchronous backend.
     */
-  def apply[F[_]: Async](client: S3AsyncClient) =
+  def apply[F[_]: ConcurrentEffect](client: S3AsyncClient) =
     new PureS3Client[F] {
       private def lift[A](f: => CompletableFuture[A]): F[A] = Sync[F].delay(f).futureLift
+
+      def getObjectStream(r: GetObjectRequest): Stream[F, Byte] =
+        Stream
+          .eval(lift {
+            val transformer = Fs2AsyncResponseTransformer[F, GetObjectResponse]
+            client.getObject(r, transformer)
+          })
+          .flatMap(_._2)
 
       def getObjectBytes(r: GetObjectRequest): F[ResponseBytes[GetObjectResponse]] =
         lift(client.getObject(r, AsyncResponseTransformer.toBytes[GetObjectResponse]()))
@@ -111,6 +133,6 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
     S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F])
 }

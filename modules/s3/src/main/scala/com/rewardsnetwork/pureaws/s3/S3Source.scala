@@ -12,12 +12,23 @@ import scala.jdk.CollectionConverters._
 /** A helper for downloading object bytes from an S3 object using FS2. */
 trait S3Source[F[_]] {
 
-  /** Read a stream of bytes from the object at the specified bucket/key in S3. */
+  /** Read a stream of bytes from the object at the specified bucket/key in S3.
+    * For reading a whole object into memory at once and not using streaming, it might be more efficient to use `readWholeObject` instead.
+    */
   def readObject(bucket: String, key: String): Stream[F, Byte]
 
+  /** Reads a whole object into memory at once from a specified bucket/key in S3. */
+  def readWholeObject(bucket: String, key: String)(implicit F: Applicative[F]): F[Array[Byte]]
+
+  /** Same as `readObject` but also returns the map of the object's metadata. */
   def readObjectWithMetadata(bucket: String, key: String)(implicit
       F: Applicative[F]
   ): F[(Map[String, String], Stream[F, Byte])]
+
+  /** Same as `readWholeObject` but also returns the map of the object's metadata. */
+  def readWholeObjectWithMetadata(bucket: String, key: String)(implicit
+      F: Applicative[F]
+  ): F[(Map[String, String], Array[Byte])]
 }
 
 object S3Source {
@@ -29,9 +40,12 @@ object S3Source {
     new S3Source[F] {
       def readObject(bucket: String, key: String): Stream[F, Byte] = {
         val req = GetObjectRequest.builder().bucket(bucket).key(key).build()
-        Stream.eval(client.getObjectBytes(req)).flatMap { bytes =>
-          Stream.emits(bytes.asByteArray)
-        }
+        client.getObjectStream(req)
+      }
+
+      def readWholeObject(bucket: String, key: String)(implicit F: Applicative[F]): F[Array[Byte]] = {
+        val req = GetObjectRequest.builder().bucket(bucket).key(key).build()
+        client.getObjectBytes(req).map(_.asByteArray)
       }
 
       def readObjectWithMetadata(bucket: String, key: String)(implicit
@@ -42,6 +56,15 @@ object S3Source {
           r.response.metadata.asScala.toMap -> Stream.eval(client.getObjectBytes(req)).flatMap { bytes =>
             Stream.emits(bytes.asByteArray)
           }
+        }
+      }
+
+      def readWholeObjectWithMetadata(bucket: String, key: String)(implicit
+          F: Applicative[F]
+      ): F[(Map[String, String], Array[Byte])] = {
+        val req = GetObjectRequest.builder().bucket(bucket).key(key).build()
+        client.getObjectBytes(req).map { r =>
+          r.response.metadata.asScala.toMap -> r.asByteArray
         }
       }
     }
@@ -62,6 +85,6 @@ object S3Source {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3Source` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region) =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
 }

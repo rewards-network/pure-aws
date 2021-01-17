@@ -95,6 +95,6 @@ object S3Sink {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3Sink` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region) =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
 }
