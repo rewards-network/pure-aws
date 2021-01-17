@@ -5,6 +5,7 @@ import java.security.MessageDigest
 
 import cats.ApplicativeError
 import cats.effect._
+import cats.implicits._
 import fs2.{Pipe, Stream}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
@@ -27,9 +28,11 @@ trait S3Sink[F[_]] {
   /** Write the stream of bytes to an object at the specified path in multiple parts.
     * Content type is assumed to be "text/plain"
     *
-    * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
+    * Unlike `writeText`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
     * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
     * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+    *
+    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised will bubble up to you.
     *
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
@@ -54,6 +57,8 @@ trait S3Sink[F[_]] {
     * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
     * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
     * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+    *
+    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised will bubble up to you.
     *
     * @param bucket The bucket of the object you are uploading to.
     * @param key The key of the object you are uploading to.
@@ -149,6 +154,11 @@ object S3Sink {
               .fold(List.empty[CompletedPart])(_ :+ _)
               .map(completeUploadReq)
               .evalMap(client.completeMultipartUpload)
+              .handleErrorWith { e =>
+                val abortReq = AbortMultipartUploadRequest.builder.bucket(bucket).key(key).uploadId(uploadId).build
+                Stream
+                  .eval(client.abortMultipartUpload(abortReq) *> ApplicativeError[F, Throwable].raiseError[String](e))
+              }
               .as(())
           }
         }
