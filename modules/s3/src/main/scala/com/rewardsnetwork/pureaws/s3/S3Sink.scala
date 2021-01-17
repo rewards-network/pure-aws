@@ -1,11 +1,11 @@
 package com.rewardsnetwork.pureaws.s3
 
 import java.nio.ByteBuffer
-import java.security.MessageDigest
 
 import cats.ApplicativeError
 import cats.effect._
 import cats.implicits._
+import com.rewardsnetwork.pureaws.utils.md5String
 import fs2.{Pipe, Stream}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
@@ -79,30 +79,19 @@ object S3Sink {
   /** Creates a new `S3Sink` given an existing `PureS3Client`.
     */
   def apply[F[_]](client: PureS3Client[F])(implicit F: ApplicativeError[F, Throwable]): S3Sink[F] = {
-    def md5String(bytes: Array[Byte]) =
-      scodec.bits.ByteVector(MessageDigest.getInstance("MD5").digest(bytes)).toBase64
-
-    //Helper function to prevent code drifting too far to the right
-    def putObj(bucket: String, key: String, bytes: ByteBuffer, contentType: String): F[PutObjectResponse] = {
-      val req = PutObjectRequest.builder
-        .bucket(bucket)
-        .key(key)
-        .contentType(contentType)
-        .contentMD5(md5String(bytes.array))
-        .build
-
-      client.putObject(
-        req,
-        bytes
-      )
-    }
-
     new S3Sink[F] {
       def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, Unit] = { s =>
         s.chunkAll
           .map(_.toByteBuffer)
-          .evalMap { allBytes =>
-            putObj(bucket, key, allBytes, contentType)
+          .evalMap { bytes =>
+            val req = PutObjectRequest.builder
+              .bucket(bucket)
+              .key(key)
+              .contentType(contentType)
+              .contentMD5(md5String(bytes.array))
+              .build
+
+            client.putObject(req, bytes)
           }
           .flatMap { res =>
             val statusCode = res.sdkHttpResponse().statusCode()
