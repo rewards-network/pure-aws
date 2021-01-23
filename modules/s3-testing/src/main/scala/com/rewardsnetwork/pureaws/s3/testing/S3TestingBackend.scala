@@ -17,6 +17,8 @@ trait S3TestingBackend[F[_]] {
 }
 
 object S3TestingBackend {
+
+  /** An S3 testing backend that runs in-memory using a concurrently available Map. */
   def inMemory[F[_]: Sync] =
     Ref[F].of(Map.empty[(String, String), (Map[String, String], Array[Byte])]).map { ref =>
       new S3TestingBackend[F] {
