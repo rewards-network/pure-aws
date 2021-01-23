@@ -70,8 +70,25 @@ These simplified clients are as follows:
 
 ### S3
 
+#### SimpleS3Client
+The main entrypoint for working with S3 should be the `SimpleS3Client`.
+It contains all of the subsequent clients inside of it, for you to access as-needed.
+For modularity and separation of concerns, we've separated out the client types based on use-case, but if you need access to everything at once, this is the client you want.
+
+```scala
+import com.rewardsnetwork.pureaws.SimpleS3Client
+
+val s3ClientResource: Resource[IO, SimpleS3Client[IO]] = Blocker[IO].flatMap(SimpleS3Client.async[IO](_, region))
+
+s3ClientResource.use { client =>
+  ///Access each of the clients within here
+}
+```
+
+Detailed below are each of these clients and their individual use-cases.
+
 #### S3ObjectOps
-Perform basic operations on S3 objects:
+Perform basic operations on S3 objects, available at `SimpleS3Client#ops` or by itself:
 
 ```scala
 import com.rewardsnetwork.pureaws.S3ObjectOps
@@ -92,7 +109,7 @@ opsResource.use { ops =>
 ```
 
 #### Sink
-Write S3 objects using S3 (multipart not currently supported):
+Write S3 objects using S3 (multipart not currently supported), available at `SimpleS3Client#sink` or by itself:
 
 ```scala
 import com.rewardsnetwork.pureaws.S3Sink
@@ -109,7 +126,7 @@ sinkResource.use { sink =>
 ```
 
 #### Source
-Stream S3 objects from S3 as bytes:
+Stream S3 objects from S3 as bytes, available at `SimpleS3Client#source` or by itself:
 
 ```scala
 import com.rewardsnetwork.pureaws.S3Source
