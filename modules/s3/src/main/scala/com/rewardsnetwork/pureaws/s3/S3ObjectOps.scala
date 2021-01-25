@@ -1,10 +1,12 @@
 package com.rewardsnetwork.pureaws.s3
 
-import cats.MonadError
+import cats.Monad
 import cats.effect._
 import cats.implicits._
-import software.amazon.awssdk.services.s3.model.{CopyObjectRequest, DeleteObjectRequest}
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.s3.model._
+
+import scala.jdk.CollectionConverters._
 
 /** Defines miscelaneous operations for S3 objects */
 trait S3ObjectOps[F[_]] {
@@ -17,7 +19,7 @@ trait S3ObjectOps[F[_]] {
     * @param newKey Key to copy the object to.
     * @return `Unit` if successful, will throw if failed.
     */
-  def copy(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
+  def copyObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
 
   /** Deletes the object at the specified bucket and key
     *
@@ -25,9 +27,9 @@ trait S3ObjectOps[F[_]] {
     * @param key Key of the object to be deleted.
     * @return `Unit` if successful, will throw if failed.
     */
-  def delete(bucket: String, key: String): F[Unit]
+  def deleteObject(bucket: String, key: String): F[Unit]
 
-  /** A `copy`, followed by a `delete` of the original object.
+  /** A `copyObject`, followed by a `deleteObject` of the original object.
     * Be warned that this operation is, by design, not atomic and if the copy or delete step fails you might need to clean up your S3 bucket.
     *
     * @param oldBucket Bucket of the object to be moved.
@@ -36,46 +38,83 @@ trait S3ObjectOps[F[_]] {
     * @param newKey Key to move the object to.
     * @return `Unit` if successful, will throw if failed.
     */
-  def move(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
+  def moveObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
+
+  /** Lists objects in a given bucket, with some optional config parameters.
+    *
+    * @param bucket The bucket you would like to list objects in.
+    * @param delimiter (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example delimiter would be "/".
+    * @param prefix (Optional) a prefix that you want to filter your search by. When used along with `delimiter` it can affect your common prefix results.
+    * @param expectedBucketOwner (Optional) the owner of this bucket, if it is not you.
+    * @param requestPayer (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
+    * @return An `S3ObjectListing` containing a complete list of all keys in the listed bucket, and all common prefixes between them.
+    */
+  def listObjects(
+      bucket: String,
+      delimiter: Option[String] = none,
+      prefix: Option[String] = none,
+      expectedBucketOwner: Option[String] = none,
+      requestPayer: Option[RequestPayer]
+  ): F[S3ObjectListing]
 }
 
 object S3ObjectOps {
-  def apply[F[_]](client: PureS3Client[F])(implicit F: MonadError[F, Throwable]) = {
+  def apply[F[_]: Monad](client: PureS3Client[F]) = {
     new S3ObjectOps[F] {
 
-      def copy(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit] = {
+      def copyObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit] = {
         val req = CopyObjectRequest
           .builder()
           .copySource(s"$oldBucket/$oldKey")
           .destinationBucket(newBucket)
           .destinationKey(newKey)
           .build()
-        client.copyObject(req).flatMap { res =>
-          val statusCode = res.sdkHttpResponse.statusCode
-          val statusText = res.sdkHttpResponse.statusText
-          if (statusCode >= 300 || statusCode < 200) {
-            F.raiseError[Unit](new Exception(s"Status code is $statusCode for copying object ($statusText)"))
-          } else {
-            F.unit
-          }
-        }
+        client.copyObject(req).void
       }
 
-      def delete(bucket: String, key: String): F[Unit] = {
+      def deleteObject(bucket: String, key: String): F[Unit] = {
         val req = DeleteObjectRequest.builder().bucket(bucket).key(key).build()
-        client.deleteObject(req).flatMap { res =>
-          val statusCode = res.sdkHttpResponse.statusCode
-          val statusText = res.sdkHttpResponse.statusText
-          if (statusCode >= 300 || statusCode < 200) {
-            F.raiseError[Unit](new Exception(s"Status code is $statusCode for deleting object ($statusText)"))
-          } else {
-            F.unit
-          }
-        }
+        client.deleteObject(req).void
       }
 
-      def move(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit] = {
-        (copy(oldBucket, oldKey, newBucket, newKey) >> delete(oldBucket, oldKey))
+      def moveObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit] = {
+        (copyObject(oldBucket, oldKey, newBucket, newKey) *> deleteObject(oldBucket, oldKey))
+      }
+
+      def listObjects(
+          bucket: String,
+          delimiter: Option[String] = none,
+          prefix: Option[String] = none,
+          expectedBucketOwner: Option[String] = none,
+          requestPayer: Option[RequestPayer]
+      ): F[S3ObjectListing] = {
+        val initialReq = ListObjectsV2Request.builder.bucket(bucket)
+        val reqWithDelimiter = delimiter.fold(initialReq)(s => initialReq.delimiter(s))
+        val reqWithPrefix = prefix.fold(reqWithDelimiter)(s => reqWithDelimiter.prefix(s))
+        val reqWithBucketOwner = expectedBucketOwner.fold(reqWithPrefix)(s => reqWithPrefix.expectedBucketOwner(s))
+        val reqWithRequestPayer = requestPayer.fold(reqWithBucketOwner)(rp => reqWithBucketOwner.requestPayer(rp))
+
+        val finalReq = reqWithRequestPayer.build()
+
+        def go(
+            res: ListObjectsV2Response,
+            accPrefixes: List[String],
+            accObjects: List[S3ObjectInfo]
+        ): F[S3ObjectListing] = {
+          if (res.isTruncated) {
+            val ct = res.nextContinuationToken
+            val nextReq = reqWithRequestPayer.continuationToken(ct).build()
+            val prefixes = res.commonPrefixes.asScala.toList.map(_.prefix)
+            val objects = res.contents.asScala.toList.map(S3ObjectInfo.fromObject(_, bucket))
+            client.listObjects(nextReq).flatMap(go(_, accPrefixes ++ prefixes, accObjects ++ objects))
+          } else {
+            val prefixes = (accPrefixes ++ res.commonPrefixes.asScala.toList.map(_.prefix)).distinct
+            val objects = accObjects ++ res.contents.asScala.toList.map(S3ObjectInfo.fromObject(_, bucket))
+            S3ObjectListing(objects, prefixes).pure[F]
+          }
+        }
+
+        client.listObjects(finalReq).flatMap(go(_, Nil, Nil))
       }
 
     }
