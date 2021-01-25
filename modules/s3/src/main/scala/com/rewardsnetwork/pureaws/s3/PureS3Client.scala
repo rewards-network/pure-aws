@@ -34,6 +34,33 @@ trait PureS3Client[F[_]] {
     */
   def completeMultipartUpload(r: CompleteMultipartUploadRequest): F[CompleteMultipartUploadResponse]
 
+  /** Create an S3 bucket with the provided configuration.
+    *
+    * @param r A `CreateBucketRequest` containing the name and permissions of the bucket you would like to create.
+    * @return A `CreateBucketResponse` indicating the status of your request.
+    */
+  def createBucket(r: CreateBucketRequest): F[CreateBucketResponse]
+
+  /** Delete an S3 bucket.
+    *
+    * @param r A `DeleteBucketRequest` containing the name of the bucket you would like to delete.
+    * @return A `DeleteBucketResponse` indicating the status of your request.
+    */
+  def deleteBucket(r: DeleteBucketRequest): F[DeleteBucketResponse]
+
+  /** Lists all available S3 buckets.
+    *
+    * @return A `ListBucketsResponse` containing a list of all available buckets.
+    */
+  def listBuckets(): F[ListBucketsResponse]
+
+  /** Checks if you have permissions to access a given bucket.
+    *
+    * @param r A `HeadBucketRequest` containing information about the bucket you would like to check your permissions for.
+    * @return A `HeadBucketResponse` indicating the status of your request.
+    */
+  def headBucket(r: HeadBucketRequest): F[HeadBucketResponse]
+
   /** Signal the intent to start a multipart upload.
     *
     * @param r A `CreateMultipartUploadRequest` with the bucket, key, and other parameters for your object.
@@ -83,6 +110,13 @@ trait PureS3Client[F[_]] {
     * @return A `DeleteObjectRequest` indicating the status of your request.
     */
   def deleteObject(r: DeleteObjectRequest): F[DeleteObjectResponse]
+
+  /** Lists all available objects in an S3 bucket.
+    *
+    * @param r A `ListObjectsV2Request` containing the name of the bucket you would like to list objects in.
+    * @return A `ListObjectsResponse` indicating the status of your request.
+    */
+  def listObjects(r: ListObjectsV2Request): F[ListObjectsV2Response]
 }
 
 object PureS3Client {
@@ -131,6 +165,21 @@ object PureS3Client {
       def deleteObject(r: DeleteObjectRequest): F[DeleteObjectResponse] =
         block(client.deleteObject(r))
 
+      def createBucket(r: CreateBucketRequest): F[CreateBucketResponse] =
+        block(client.createBucket(r))
+
+      def deleteBucket(r: DeleteBucketRequest): F[DeleteBucketResponse] =
+        block(client.deleteBucket(r))
+
+      def listBuckets(): F[ListBucketsResponse] =
+        block(client.listBuckets())
+
+      def headBucket(r: HeadBucketRequest): F[HeadBucketResponse] =
+        block(client.headBucket(r))
+
+      def listObjects(r: ListObjectsV2Request): F[ListObjectsV2Response] =
+        block(client.listObjectsV2(r))
+
     }
 
   /** Builds a `PureS3Client` from an AWS SDK `S3AsyncClient`.
@@ -177,6 +226,21 @@ object PureS3Client {
 
       def deleteObject(r: DeleteObjectRequest): F[DeleteObjectResponse] =
         lift(client.deleteObject(r))
+
+      def createBucket(r: CreateBucketRequest): F[CreateBucketResponse] =
+        lift(client.createBucket(r))
+
+      def deleteBucket(r: DeleteBucketRequest): F[DeleteBucketResponse] =
+        lift(client.deleteBucket(r))
+
+      def listBuckets(): F[ListBucketsResponse] =
+        lift(client.listBuckets())
+
+      def headBucket(r: HeadBucketRequest): F[HeadBucketResponse] =
+        lift(client.headBucket(r))
+
+      def listObjects(r: ListObjectsV2Request): F[ListObjectsV2Response] =
+        lift(client.listObjectsV2(r))
 
     }
 
