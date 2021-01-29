@@ -52,17 +52,35 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
       bm.get(bucket) match {
         case None => F.raiseError(new Exception(s"Bucket $bucket does not exist"))
         case Some((_, objects)) =>
-          val objs = objects.toList.map { case (key, _) =>
-            S3ObjectInfo(bucket, key, Instant.EPOCH, "", "", "")
+          val objs = objects.toList.map { case (key, (_, payload)) =>
+            S3ObjectInfo(bucket, key, Instant.EPOCH, "", "", "", payload.length.toLong)
           }
-          val maybePrefixes = for {
+          val resultsForDelimitedPrefix: Option[(List[S3ObjectInfo], Set[String])] = for {
             d <- delimiter
             p <- prefix
           } yield {
-            objs.map(_.key.stripPrefix(p).split(d).dropRight(1).mkString).distinct.map(p + _)
+            val splitObjs: List[(Array[String], S3ObjectInfo)] = objs.map(o => o.key.split(d) -> o)
+            val prefixes: Set[String] = splitObjs.mapFilter { case (splitKey, _) =>
+              val keyPrefix: String = splitKey.dropRight(1).mkString("", d, d)
+              if (keyPrefix.startsWith(p)) keyPrefix.some
+              else none
+            }.toSet
+            val filteredObjs: List[S3ObjectInfo] = splitObjs.mapFilter { case (splitKey, obj) =>
+              val keyPrefix = splitKey.dropRight(1).mkString("", d, d)
+              if (keyPrefix == p) obj.some
+              else none
+            }
+
+            filteredObjs -> prefixes
           }
 
-          S3ObjectListing(objs, maybePrefixes.getOrElse(Nil)).pure[F]
+          resultsForDelimitedPrefix
+            .map { case (o, p) => S3ObjectListing(o, p) }
+            .getOrElse(
+              S3ObjectListing(objs, Set.empty)
+            )
+            .pure[F]
+
       }
     }
   }
