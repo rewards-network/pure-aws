@@ -6,7 +6,8 @@ import software.amazon.awssdk.regions.Region
 
 /** An amalgamation of all available S3 algebras in one client. */
 sealed trait SimpleS3Client[F[_]] {
-  def ops: S3ObjectOps[F]
+  def bucketOps: S3BucketOps[F]
+  def objectOps: S3ObjectOps[F]
   def sink: S3Sink[F]
   def source: S3Source[F]
 }
@@ -17,7 +18,8 @@ object SimpleS3Client {
     * Gives you access to all available algebras for the S3 client in one place.
     */
   def apply[F[_]](client: PureS3Client[F])(implicit F: MonadError[F, Throwable]) = new SimpleS3Client[F] {
-    val ops = S3ObjectOps(client)
+    val bucketOps = S3BucketOps(client)
+    val objectOps = S3ObjectOps(client)
     val sink = S3Sink(client)
     val source = S3Source(client)
   }
