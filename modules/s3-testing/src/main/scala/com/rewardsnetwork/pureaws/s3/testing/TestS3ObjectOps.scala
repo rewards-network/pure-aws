@@ -46,10 +46,10 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
   def listObjectsPaginated(
       bucket: String,
       maxKeysPerRequest: Int,
-      delimiter: Option[String],
-      prefix: Option[String],
-      expectedBucketOwner: Option[String],
-      requestPayer: Option[RequestPayer]
+      delimiter: Option[String] = none,
+      prefix: Option[String] = none,
+      expectedBucketOwner: Option[String] = none,
+      requestPayer: Option[RequestPayer] = none
   ): fs2.Stream[F, S3ObjectListing] = doOrFailStream {
     Stream.eval(backend.getAll).flatMap { bm =>
       bm.get(bucket) match {
@@ -99,10 +99,10 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
     */
   def listObjects(
       bucket: String,
-      delimiter: Option[String],
-      prefix: Option[String],
-      expectedBucketOwner: Option[String],
-      requestPayer: Option[RequestPayer]
+      delimiter: Option[String] = none,
+      prefix: Option[String] = none,
+      expectedBucketOwner: Option[String] = none,
+      requestPayer: Option[RequestPayer] = none
   )(implicit sync: Sync[F]): F[S3ObjectListing] = listObjectsPaginated(
     bucket = bucket,
     delimiter = delimiter,
