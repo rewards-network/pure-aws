@@ -2,7 +2,8 @@ package com.rewardsnetwork.pureaws.s3
 
 import cats.Monad
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
+import fs2.Stream
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
 
@@ -41,13 +42,14 @@ trait S3ObjectOps[F[_]] {
   def moveObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
 
   /** Lists objects in a given bucket, with some optional config parameters.
+    * For a paginated listing, see `listObjectsPaginated`.
     *
     * @param bucket The bucket you would like to list objects in.
     * @param delimiter (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example delimiter would be "/".
-    * @param prefix (Optional) a prefix that you want to filter your search by. When used along with `delimiter` it can affect your common prefix results.
+    * @param prefix (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it can affect your common prefix results.
     * @param expectedBucketOwner (Optional) the owner of this bucket, if it is not you.
     * @param requestPayer (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
-    * @return An `S3ObjectListing` containing a complete list of all keys in the listed bucket, and all common prefixes between them.
+    * @return An `S3ObjectListing` containing a complete list of all objects in the listed bucket, and all common prefixes between them.
     */
   def listObjects(
       bucket: String,
@@ -55,7 +57,27 @@ trait S3ObjectOps[F[_]] {
       prefix: Option[String] = none,
       expectedBucketOwner: Option[String] = none,
       requestPayer: Option[RequestPayer]
-  ): F[S3ObjectListing]
+  )(implicit sync: Sync[F]): F[S3ObjectListing]
+
+  /** Lists objects in a given bucket, paginated as a stream of results-per-request.
+    * For a complete listing, see `listObjects`.
+    *
+    * @param bucket The bucket you would like to list objects in.
+    * @param maxKeysPerRequest The max number of results you would like to return per-request. Default is 1000 results.
+    * @param delimiter (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example delimiter would be "/".
+    * @param prefix (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it can affect your common prefix results.
+    * @param expectedBucketOwner (Optional) the owner of this bucket, if it is not you.
+    * @param requestPayer (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
+    * @return A stream of `S3ObjectListing` objects containing a list of all of the objects and prefixes per-request.
+    */
+  def listObjectsPaginated(
+      bucket: String,
+      maxKeysPerRequest: Int = 1000,
+      delimiter: Option[String] = none,
+      prefix: Option[String] = none,
+      expectedBucketOwner: Option[String] = none,
+      requestPayer: Option[RequestPayer]
+  ): Stream[F, S3ObjectListing]
 }
 
 object S3ObjectOps {
@@ -83,12 +105,28 @@ object S3ObjectOps {
 
       def listObjects(
           bucket: String,
+          delimiter: Option[String],
+          prefix: Option[String],
+          expectedBucketOwner: Option[String],
+          requestPayer: Option[RequestPayer]
+      )(implicit sync: Sync[F]): F[S3ObjectListing] =
+        listObjectsPaginated(
+          bucket = bucket,
+          delimiter = delimiter,
+          prefix = prefix,
+          expectedBucketOwner = expectedBucketOwner,
+          requestPayer = requestPayer
+        ).foldMonoid.compile.lastOrError
+
+      def listObjectsPaginated(
+          bucket: String,
+          maxKeysPerRequest: Int = 1000,
           delimiter: Option[String] = none,
           prefix: Option[String] = none,
           expectedBucketOwner: Option[String] = none,
           requestPayer: Option[RequestPayer]
-      ): F[S3ObjectListing] = {
-        val initialReq = ListObjectsV2Request.builder.bucket(bucket)
+      ): Stream[F, S3ObjectListing] = {
+        val initialReq = ListObjectsV2Request.builder.bucket(bucket).maxKeys(maxKeysPerRequest)
         val reqWithDelimiter = delimiter.fold(initialReq)(s => initialReq.delimiter(s))
         val reqWithPrefix = prefix.fold(reqWithDelimiter)(s => reqWithDelimiter.prefix(s))
         val reqWithBucketOwner = expectedBucketOwner.fold(reqWithPrefix)(s => reqWithPrefix.expectedBucketOwner(s))
@@ -96,25 +134,20 @@ object S3ObjectOps {
 
         val finalReq = reqWithRequestPayer.build()
 
-        def go(
-            res: ListObjectsV2Response,
-            accPrefixes: Set[String],
-            accObjects: List[S3ObjectInfo]
-        ): F[S3ObjectListing] = {
-          if (res.isTruncated) {
-            val ct = res.nextContinuationToken
-            val nextReq = reqWithRequestPayer.continuationToken(ct).build()
-            val prefixes = res.commonPrefixes.asScala.toList.map(_.prefix)
+        Stream.unfoldLoopEval[F, ListObjectsV2Request, S3ObjectListing](finalReq) { nextReq =>
+          client.listObjects(nextReq).map[(S3ObjectListing, Option[ListObjectsV2Request])] { res =>
+            val prefixes = res.commonPrefixes.asScala.map(_.prefix).toSet
             val objects = res.contents.asScala.toList.map(S3ObjectInfo.fromS3Object(_, bucket))
-            client.listObjects(nextReq).flatMap(go(_, accPrefixes ++ prefixes, accObjects ++ objects))
-          } else {
-            val prefixes = (accPrefixes ++ res.commonPrefixes.asScala.map(_.prefix).toSet)
-            val objects = accObjects ++ res.contents.asScala.toList.map(S3ObjectInfo.fromS3Object(_, bucket))
-            S3ObjectListing(objects, prefixes).pure[F]
+            val out = S3ObjectListing(objects, prefixes)
+            if (res.isTruncated) {
+              val ct = res.nextContinuationToken
+              val nextReq = reqWithRequestPayer.continuationToken(ct).build()
+              out -> nextReq.some
+            } else {
+              out -> none[ListObjectsV2Request]
+            }
           }
         }
-
-        client.listObjects(finalReq).flatMap(go(_, Set.empty, Nil))
       }
 
     }
