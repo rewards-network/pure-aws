@@ -88,22 +88,29 @@ s3ClientResource.use { client =>
 
 Detailed below are each of these clients and their individual use-cases.
 
-#### S3ObjectOps
-Perform basic operations on S3 objects, available at `SimpleS3Client#ops` or by itself:
+#### S3BucketOps & S3ObjectOps
+Perform basic operations on S3 buckets and objects, available at `SimpleS3Client#bucketOps` and `SimpleS3Client#objectOps` respectively, or by themselves as `S3BucketOps` and `S3ObjectOps`:
 
 ```scala
-import com.rewardsnetwork.pureaws.S3ObjectOps
+import com.rewardsnetwork.pureaws.{S3BucketOps, S3ObjectOps}
+import software.amazon.awssdk.services.s3.model.BucketLocationConstraint
 
-val opsResource: Resource[IO, S3ObjectOps[IO]] = Blocker[IO].flatMap(S3ObjectOps.async[IO](_, region))
+val pureClient: Resource[IO, PureS3Client[IO]] = Blocker[IO].flatMap(PureS3Client.async[IO](_, region))
+val bucketAndObjectOps = pureClient.map(p => S3BucketOps(p) -> S3ObjectOps(p))
 
-opsResource.use { ops =>
+bucketAndObjectOps.use { case (bucketOps, objectOps) =>
+
+  //Create buckets in the region of your choice, as well as delete and list them
+  val createBucket = bucketOpe.createBucket("my-bucket", BucketLocationConstraint.US_EAST_1)
+  val deleteBucket = bucketOps.deleteBucket("my-bucket")
+  val listBuckets = bucketOps.listBuckets //IO[List[S3BucketInfo]]
 
   //Define copy or delete operations manually...
-  val copy = ops.copy("oldBucket", "oldKey", "newBucket", "newKey")
-  val delete = ops.delete("oldBucket", "oldKey")
+  val copy = objectOps.copy("oldBucket", "oldKey", "newBucket", "newKey")
+  val delete = objectOps.delete("oldBucket", "oldKey")
   
   //Or use a simplified version as `move` which copies and deletes in sequence
-  val move = ops.move("oldBucket", "oldKey", "newBucket", "newKey")
+  val move = objectOps.move("oldBucket", "oldKey", "newBucket", "newKey")
 
   move
 } //IO[Unit]
@@ -196,7 +203,7 @@ import fs2.Stream
 import fs2.text._
 
 //First, make a backend
-val program = S3TestingBackend.inMemory[IO].flatMap { backend =>
+val program = S3TestingBackend.inMemory[IO]().flatMap { backend =>
   //Plug the backend into each component you test
   val sink: S3Sink[IO] = TestS3Sink(backend)
 
