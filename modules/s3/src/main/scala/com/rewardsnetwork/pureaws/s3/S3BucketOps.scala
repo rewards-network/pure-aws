@@ -48,7 +48,7 @@ object S3BucketOps {
         permissions: List[(String, S3BucketPermission)] = Nil
     ): F[Unit] = {
       val bucketConfig = CreateBucketConfiguration.builder.locationConstraint(location).build
-      val initialReq = CreateBucketRequest.builder.bucket(name).createBucketConfiguration(bucketConfig)
+      val initialReq = CreateBucketRequest.builder.bucket(name).acl(acl).createBucketConfiguration(bucketConfig)
       val finalReq = permissions
         .foldRight(initialReq) { case ((name, permissions), req) =>
           permissions match {
