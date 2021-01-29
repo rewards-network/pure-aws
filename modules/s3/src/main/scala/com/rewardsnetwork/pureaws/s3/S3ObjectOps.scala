@@ -98,23 +98,23 @@ object S3ObjectOps {
 
         def go(
             res: ListObjectsV2Response,
-            accPrefixes: List[String],
+            accPrefixes: Set[String],
             accObjects: List[S3ObjectInfo]
         ): F[S3ObjectListing] = {
           if (res.isTruncated) {
             val ct = res.nextContinuationToken
             val nextReq = reqWithRequestPayer.continuationToken(ct).build()
             val prefixes = res.commonPrefixes.asScala.toList.map(_.prefix)
-            val objects = res.contents.asScala.toList.map(S3ObjectInfo.fromObject(_, bucket))
+            val objects = res.contents.asScala.toList.map(S3ObjectInfo.fromS3Object(_, bucket))
             client.listObjects(nextReq).flatMap(go(_, accPrefixes ++ prefixes, accObjects ++ objects))
           } else {
-            val prefixes = (accPrefixes ++ res.commonPrefixes.asScala.toList.map(_.prefix)).distinct
-            val objects = accObjects ++ res.contents.asScala.toList.map(S3ObjectInfo.fromObject(_, bucket))
+            val prefixes = (accPrefixes ++ res.commonPrefixes.asScala.map(_.prefix).toSet)
+            val objects = accObjects ++ res.contents.asScala.toList.map(S3ObjectInfo.fromS3Object(_, bucket))
             S3ObjectListing(objects, prefixes).pure[F]
           }
         }
 
-        client.listObjects(finalReq).flatMap(go(_, Nil, Nil))
+        client.listObjects(finalReq).flatMap(go(_, Set.empty, Nil))
       }
 
     }
