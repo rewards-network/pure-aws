@@ -61,7 +61,7 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
             }
             .sortBy(_.key)
 
-          val pages = allObjs.sliding(maxKeysPerRequest).toList
+          val pages = allObjs.sliding(maxKeysPerRequest, maxKeysPerRequest).toList
 
           Stream.emits(pages).map { objs =>
             val resultsForDelimitedPrefix: Option[(List[S3ObjectInfo], Set[String])] = for {
