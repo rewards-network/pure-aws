@@ -30,8 +30,21 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.sync[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `SimpleS3Client` instance using a synchronous backend.
+    */
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, SimpleS3Client[G]] =
+    PureS3Client.syncIn[F, G](blocker, awsRegion).map(apply[G])
 
   /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
     *
@@ -39,6 +52,19 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `SimpleS3Client` instance using an asynchronous backend.
+    */
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, SimpleS3Client[G]] =
+    PureS3Client.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }
