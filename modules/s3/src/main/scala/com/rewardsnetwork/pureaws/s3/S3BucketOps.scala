@@ -1,8 +1,10 @@
 package com.rewardsnetwork.pureaws.s3
 
 import cats.Functor
+import cats.effect._
 import cats.implicits._
 import com.rewardsnetwork.pureaws.s3.S3BucketPermission._
+import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
 
 import scala.jdk.CollectionConverters._
@@ -78,4 +80,48 @@ object S3BucketOps {
         .map(_.map(bucket => S3BucketInfo(bucket.name, bucket.creationDate)))
 
   }
+
+  /** Constructs an `S3BucketOps` using an underlying synchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `S3BucketOps` instance using a synchronous backend.
+    */
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, S3BucketOps[F]] =
+    PureS3Client.sync[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs an `S3BucketOps` using an underlying synchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `S3BucketOps` instance using a synchronous backend.
+    */
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, S3BucketOps[G]] =
+    PureS3Client.syncIn[F, G](blocker, awsRegion).map(apply[G])
+
+  /** Constructs an `S3BucketOps` using an underlying asynchronous client backend.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `S3BucketOps` instance using an asynchronous backend.
+    */
+  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, S3BucketOps[F]] =
+    PureS3Client.async[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs an `S3BucketOps` using an underlying asynchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `S3BucketOps` instance using an asynchronous backend.
+    */
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, S3BucketOps[G]] =
+    PureS3Client.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }
