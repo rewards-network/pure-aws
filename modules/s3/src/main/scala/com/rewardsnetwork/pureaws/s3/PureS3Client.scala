@@ -253,6 +253,19 @@ object PureS3Client {
   def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
     S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[F](blocker, _))
 
+  /** Creates a `PureS3Client` using a synchronous backend with default settings.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `Resource` containing a `PureS3Client` using a synchronous backend.
+    */
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, PureS3Client[G]] =
+    S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[G](blocker, _))
+
   /** Creates a `PureS3Client` using an asynchronous backend with default settings.
     *
     * @param blocker A Cats Effect `Blocker`.
@@ -261,4 +274,17 @@ object PureS3Client {
     */
   def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
     S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F])
+
+  /** Creates a `PureS3Client` using an asynchronous backend with default settings.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
+    */
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, PureS3Client[G]] =
+    S3ClientBackend.async[F](blocker, awsRegion)().map(apply[G])
 }

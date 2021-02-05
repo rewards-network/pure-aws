@@ -146,8 +146,21 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return An `SimpleSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.sync[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return An `SimpleSqsClient` instance using a synchronous backend.
+    */
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, SimpleSqsClient[G]] =
+    PureSqsClient.syncIn[F, G](blocker, awsRegion).map(apply[G])
 
   /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
     *
@@ -155,6 +168,19 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region) =
+  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.async[F](blocker, awsRegion).map(apply[F])
+
+  /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
+    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+    *
+    * @param blocker A Cats Effect `Blocker`.
+    * @param awsRegion The AWS region you are operating in.
+    * @return A `SimpleSqsClient` instance using an asynchronous backend.
+    */
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async: ContextShift](
+      blocker: Blocker,
+      awsRegion: Region
+  ): Resource[F, SimpleSqsClient[G]] =
+    PureSqsClient.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }
