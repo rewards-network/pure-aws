@@ -1,10 +1,10 @@
 //Core deps
-val amazonV = "2.15.80"
+val amazonV = "2.15.82"
 val catsV = "2.3.1"
-val catsEffectV = "2.3.1"
-val fs2V = "2.5.2"
+val catsEffectV = "2.3.3"
+val fs2V = "2.5.0"
 val log4catsV = "1.1.1"
-val refinedV = "0.9.20"
+val refinedV = "0.9.21"
 val monixV = "3.3.0"
 val collectionCompatV = "2.4.1"
 
@@ -24,7 +24,7 @@ val collectionCompat =
 
 //Test/build deps
 val scalaTestV = "3.2.3"
-val scalaCheckV = "1.15.2"
+val scalaCheckV = "1.15.3"
 val scalaTestScalacheckV = "3.2.2.0"
 val betterMonadicForV = "0.3.1"
 val flexmarkV = "0.35.10" // scala-steward:off
