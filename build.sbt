@@ -40,7 +40,7 @@ val scalatestPlusScalacheck =
 val flexmark = "com.vladsch.flexmark" % "flexmark-all" % flexmarkV % "test"
 
 //Scala versions supported
-val scala213 = "2.13.4"
+val scala213 = "2.13.5"
 val scala212 = "2.12.12"
 
 // Project setup
