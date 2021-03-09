@@ -1,5 +1,5 @@
 //Core deps
-val amazonV = "2.15.82"
+val amazonV = "2.16.15"
 val catsV = "2.4.2"
 val catsEffectV = "2.3.3"
 val fs2V = "2.5.0"
