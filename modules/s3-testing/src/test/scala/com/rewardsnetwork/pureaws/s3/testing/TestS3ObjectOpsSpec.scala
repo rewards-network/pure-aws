@@ -41,7 +41,7 @@ class TestS3ObjectOpsSpec extends AnyFreeSpec with Matchers with ScalaCheckPrope
             val expectedResults = objIds
               .sortBy(i => s"$first/$second/$third/$i.txt")
               .map { i =>
-                val info = S3ObjectInfo(bucket, s"$first/$second/$third/$i.txt", Instant.EPOCH, "", "", "", 0L)
+                val info = S3ObjectInfo(bucket, s"$first/$second/$third/$i.txt", Instant.EPOCH, "", None, 0L)
                 S3ObjectListing(List(info), Set(s"$first/$second/$third/"))
               }
               .sliding(10, 10)
