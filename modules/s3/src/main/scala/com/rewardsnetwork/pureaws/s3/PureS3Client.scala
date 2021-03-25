@@ -282,7 +282,7 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect: ContextShift](
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
       blocker: Blocker,
       awsRegion: Region
   ): Resource[F, PureS3Client[G]] =

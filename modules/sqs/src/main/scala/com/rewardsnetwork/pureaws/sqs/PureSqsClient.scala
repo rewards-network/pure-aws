@@ -174,7 +174,7 @@ object PureSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async: ContextShift](
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async](
       blocker: Blocker,
       awsRegion: Region
   ): Resource[F, PureSqsClient[G]] =

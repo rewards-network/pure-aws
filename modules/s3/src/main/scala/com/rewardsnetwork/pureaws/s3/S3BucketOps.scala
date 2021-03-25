@@ -119,7 +119,7 @@ object S3BucketOps {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3BucketOps` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect: ContextShift](
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
       blocker: Blocker,
       awsRegion: Region
   ): Resource[F, S3BucketOps[G]] =
