@@ -3,7 +3,7 @@ val amazonV = "2.16.26"
 val catsV = "2.4.2"
 val catsEffectV = "2.4.0"
 val fs2V = "2.5.3"
-val log4catsV = "1.1.1"
+val log4catsV = "1.2.0"
 val refinedV = "0.9.21"
 val monixV = "3.3.0"
 val collectionCompatV = "2.4.2"
@@ -13,7 +13,6 @@ val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
 val fs2Core = "co.fs2" %% "fs2-core" % fs2V
 val fs2Io = "co.fs2" %% "fs2-io" % fs2V
 val fs2ReactiveStreams = "co.fs2" %% "fs2-reactive-streams" % fs2V
-val log4catsCore = "io.chrisdavenport" %% "log4cats-core" % log4catsV
 val awsSdkCore = "software.amazon.awssdk" % "sdk-core" % amazonV
 val awsSQS = "software.amazon.awssdk" % "sqs" % amazonV
 val awsS3 = "software.amazon.awssdk" % "s3" % amazonV
@@ -108,11 +107,9 @@ lazy val sqs = (project in file("modules/sqs"))
     libraryDependencies ++= Seq(
       //Core deps
       awsSQS,
-      log4catsCore,
       monixCatnap,
       //Test deps
-      catsEffectLaws,
-      log4catsTesting
+      catsEffectLaws
     )
   )
   .dependsOn(core % "compile->compile;test->test")
@@ -135,11 +132,9 @@ lazy val s3 = (project in file("modules/s3"))
       //Core deps
       awsS3,
       fs2Io,
-      log4catsCore,
       monixCatnap,
       //Test deps
-      catsEffectLaws,
-      log4catsTesting
+      catsEffectLaws
     )
   )
   .dependsOn(core % "compile->compile;test->test")
