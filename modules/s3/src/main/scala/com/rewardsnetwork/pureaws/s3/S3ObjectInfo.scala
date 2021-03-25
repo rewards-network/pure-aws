@@ -19,8 +19,7 @@ final case class S3ObjectInfo(
     key: String,
     lastModified: Instant,
     eTag: String,
-    ownerDisplayName: String,
-    ownerId: String,
+    owner: Option[S3ObjectOwner],
     sizeBytes: Long
 )
 
@@ -32,5 +31,5 @@ object S3ObjectInfo {
     * @param bucket The bucket that the object came from.
     */
   def fromS3Object(o: S3Object, bucket: String) =
-    S3ObjectInfo(bucket, o.key, o.lastModified, o.eTag, o.owner.displayName, o.owner.id, o.size)
+    S3ObjectInfo(bucket, o.key, o.lastModified, o.eTag, S3ObjectOwner(Option(o.owner())), o.size)
 }

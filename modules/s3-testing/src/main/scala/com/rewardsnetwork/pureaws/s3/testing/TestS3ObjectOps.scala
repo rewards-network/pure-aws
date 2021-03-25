@@ -57,7 +57,7 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
         case Some((_, objects)) =>
           val allObjs = objects.toList
             .map { case (key, (_, payload)) =>
-              S3ObjectInfo(bucket, key, Instant.EPOCH, "", "", "", payload.length.toLong)
+              S3ObjectInfo(bucket, key, Instant.EPOCH, "", None, payload.length.toLong)
             }
             .sortBy(_.key)
 
