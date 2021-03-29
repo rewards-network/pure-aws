@@ -127,7 +127,7 @@ object PureS3Client {
     * @param client A synchronous `S3Client` directly from the AWS SDK.
     * @return A shiny new `PureS3Client` with a synchronous backend.
     */
-  def apply[F[_]: Sync: ContextShift](blocker: Blocker, client: S3Client) =
+  def apply[F[_]: Sync: ContextShift](client: S3Client) =
     new PureS3Client[F] {
       private def block[A](f: => A): F[A] = blocker.blockOn(Sync[F].delay(f))
 
@@ -250,7 +250,7 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
+  def sync[F[_]: Sync: ContextShift](awsRegion: Region): Resource[F, PureS3Client[F]] =
     S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[F](blocker, _))
 
   /** Creates a `PureS3Client` using a synchronous backend with default settings.
@@ -260,9 +260,7 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](awsRegion: Region
   ): Resource[F, PureS3Client[G]] =
     S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[G](blocker, _))
 
@@ -272,7 +270,7 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
+  def async[F[_]: ConcurrentEffect: ContextShift](awsRegion: Region): Resource[F, PureS3Client[F]] =
     S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F])
 
   /** Creates a `PureS3Client` using an asynchronous backend with default settings.
@@ -282,9 +280,7 @@ object PureS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
-      blocker: Blocker,
-      awsRegion: Region
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](awsRegion: Region
   ): Resource[F, PureS3Client[G]] =
     S3ClientBackend.async[F](blocker, awsRegion)().map(apply[G])
 }

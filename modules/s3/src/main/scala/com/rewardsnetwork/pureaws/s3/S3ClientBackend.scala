@@ -18,7 +18,7 @@ object S3ClientBackend {
     * @param configure A function to configure your client before it is built and returned to you.
     * @return A configured `S3Client` as a `Resource` that will close itself after use.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region)(
+  def sync[F[_]: Sync: ContextShift](awsRegion: Region)(
       configure: S3ClientBuilder => S3ClientBuilder = identity
   ): Resource[F, S3Client] =
     Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay {
@@ -36,7 +36,7 @@ object S3ClientBackend {
     * @param configure A function to configure your client before it is built and returned to you.
     * @return A configured `S3AsyncClient` as a `Resource` that will close itself after use.
     */
-  def async[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region)(
+  def async[F[_]: Sync: ContextShift](awsRegion: Region)(
       configure: S3AsyncClientBuilder => S3AsyncClientBuilder = identity
   ): Resource[F, S3AsyncClient] =
     Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay {
