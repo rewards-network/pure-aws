@@ -2,10 +2,11 @@ package com.rewardsnetwork.pureaws.sqs
 
 import cats._
 import cats.implicits._
-import cats.effect.{Concurrent, Timer}
+import cats.effect.Concurrent
 import fs2.Stream
 
 import scala.concurrent.duration.FiniteDuration
+import cats.effect.Temporal
 
 /** The underlying abstraction for consuming a message from SQS.
   * The `T` parameter represents the type for changing the visibility timeout in seconds.
@@ -27,14 +28,14 @@ trait BaseSqsMessage[F[_], T] {
     */
   def autoDeleteAndRenew(renewEvery: FiniteDuration, visibilityTimeoutSeconds: T)(
       shouldDelete: F[Boolean]
-  )(implicit F: Concurrent[F], timer: Timer[F]): F[Unit] = {
+  )(implicit F: Concurrent[F], timer: Temporal[F]): F[Unit] = {
     autoDeleteAndRenewStream(renewEvery, visibilityTimeoutSeconds)(shouldDelete).compile.drain
   }
 
   /** Like `autoDeleteAndRenew` except it returns an FS2 `Stream` */
   def autoDeleteAndRenewStream(renewEvery: FiniteDuration, visibilityTimeoutSeconds: T)(
       shouldDelete: F[Boolean]
-  )(implicit F: Concurrent[F], timer: Timer[F]): Stream[F, Unit] = {
+  )(implicit F: Concurrent[F], timer: Temporal[F]): Stream[F, Unit] = {
     val renew = fs2.Stream.awakeEvery[F](renewEvery).evalTap { _ =>
       receiptHandle.changeVisibility(visibilityTimeoutSeconds)
     }

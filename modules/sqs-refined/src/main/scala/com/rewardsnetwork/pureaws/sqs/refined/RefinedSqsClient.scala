@@ -121,7 +121,7 @@ object RefinedSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `RefinedSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, region: Region) =
+  def sync[F[_]: Sync: ContextShift](region: Region) =
     PureSqsClient.sync[F](blocker, region).map(apply[F])
 
   /** Constructs a `RefinedSqsClient` using an underlying asynchronous client backend.
@@ -130,6 +130,6 @@ object RefinedSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `RefinedSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, region: Region) =
+  def async[F[_]: Async: ContextShift](region: Region) =
     PureSqsClient.async[F](blocker, region).map(apply[F])
 }
