@@ -1,11 +1,11 @@
 //Core deps
 val amazonV = "2.16.67"
-val catsV = "2.4.2"
-val catsEffectV = "2.4.1"
-val fs2V = "3.0.4"
+val catsV = "2.6.1"
+val catsEffectV = "2.5.1"
+val fs2V = "2.5.6"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.25"
-val monixV = "3.3.0"
+val monixV = "3.4.0"
 val collectionCompatV = "2.4.4"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
