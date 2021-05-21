@@ -1,12 +1,12 @@
 //Core deps
-val amazonV = "2.16.26"
+val amazonV = "2.16.67"
 val catsV = "2.4.2"
 val catsEffectV = "2.4.1"
-val fs2V = "2.5.3"
+val fs2V = "2.5.6"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.25"
 val monixV = "3.4.0"
-val collectionCompatV = "2.4.2"
+val collectionCompatV = "2.4.4"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
 val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
@@ -22,7 +22,7 @@ val collectionCompat =
   "org.scala-lang.modules" %% "scala-collection-compat" % collectionCompatV
 
 //Test/build deps
-val scalaTestV = "3.2.6"
+val scalaTestV = "3.2.9"
 val scalaCheckV = "1.15.4"
 val scalaTestScalacheckV = "3.2.2.0"
 val betterMonadicForV = "0.3.1"
