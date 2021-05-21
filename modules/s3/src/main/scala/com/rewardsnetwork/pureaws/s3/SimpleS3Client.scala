@@ -30,7 +30,7 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
+  def sync[F[_]: Sync: ContextShift](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.sync[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
@@ -40,9 +40,7 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](awsRegion: Region
   ): Resource[F, SimpleS3Client[G]] =
     PureS3Client.syncIn[F, G](blocker, awsRegion).map(apply[G])
 
@@ -52,7 +50,7 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
+  def async[F[_]: ConcurrentEffect: ContextShift](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
@@ -62,9 +60,7 @@ object SimpleS3Client {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
-      blocker: Blocker,
-      awsRegion: Region
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](awsRegion: Region
   ): Resource[F, SimpleS3Client[G]] =
     PureS3Client.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }

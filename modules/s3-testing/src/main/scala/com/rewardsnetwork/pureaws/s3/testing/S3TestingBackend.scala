@@ -4,10 +4,10 @@ import java.time.Instant
 
 import cats.data.OptionT
 import cats.effect.Sync
-import cats.effect.concurrent.Ref
 import cats.implicits._
 import internal.newInstant
 import S3TestingBackend._
+import cats.effect.Ref
 
 /** Defines a basic backend implementation for testing S3 interface usage */
 trait S3TestingBackend[F[_]] {
