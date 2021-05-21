@@ -1,10 +1,10 @@
 //Core deps
-val amazonV = "2.16.26"
+val amazonV = "2.16.67"
 val catsV = "2.4.2"
-val catsEffectV = "2.4.0"
+val catsEffectV = "2.4.1"
 val fs2V = "2.5.3"
 val log4catsV = "1.2.0"
-val refinedV = "0.9.21"
+val refinedV = "0.9.25"
 val monixV = "3.3.0"
 val collectionCompatV = "2.4.2"
 
@@ -23,7 +23,7 @@ val collectionCompat =
 
 //Test/build deps
 val scalaTestV = "3.2.9"
-val scalaCheckV = "1.15.3"
+val scalaCheckV = "1.15.4"
 val scalaTestScalacheckV = "3.2.2.0"
 val betterMonadicForV = "0.3.1"
 val flexmarkV = "0.35.10" // scala-steward:off
@@ -39,7 +39,7 @@ val scalatestPlusScalacheck =
 val flexmark = "com.vladsch.flexmark" % "flexmark-all" % flexmarkV % "test"
 
 //Scala versions supported
-val scala213 = "2.13.5"
+val scala213 = "2.13.6"
 val scala212 = "2.12.13"
 
 // Project setup
