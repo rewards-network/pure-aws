@@ -146,7 +146,7 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return An `SimpleSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
+  def sync[F[_]: Sync: ContextShift](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.sync[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
@@ -156,9 +156,7 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return An `SimpleSqsClient` instance using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](awsRegion: Region
   ): Resource[F, SimpleSqsClient[G]] =
     PureSqsClient.syncIn[F, G](blocker, awsRegion).map(apply[G])
 
@@ -168,7 +166,7 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
+  def async[F[_]: Async: ContextShift](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.async[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
@@ -178,9 +176,7 @@ object SimpleSqsClient {
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleSqsClient` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async](
-      blocker: Blocker,
-      awsRegion: Region
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async](awsRegion: Region
   ): Resource[F, SimpleSqsClient[G]] =
     PureSqsClient.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }

@@ -159,7 +159,7 @@ object S3ObjectOps {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3ObjectOps` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, S3ObjectOps[F]] =
+  def sync[F[_]: Sync: ContextShift](awsRegion: Region): Resource[F, S3ObjectOps[F]] =
     PureS3Client.sync[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs an `S3ObjectOps` using an underlying synchronous client backend.
@@ -169,9 +169,7 @@ object S3ObjectOps {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3ObjectOps` instance using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
+  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](awsRegion: Region
   ): Resource[F, S3ObjectOps[G]] =
     PureS3Client.syncIn[F, G](blocker, awsRegion).map(apply[G])
 
@@ -181,7 +179,7 @@ object S3ObjectOps {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3ObjectOps` instance using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, S3ObjectOps[F]] =
+  def async[F[_]: ConcurrentEffect: ContextShift](awsRegion: Region): Resource[F, S3ObjectOps[F]] =
     PureS3Client.async[F](blocker, awsRegion).map(apply[F])
 
   /** Constructs an `S3ObjectOps` using an underlying asynchronous client backend.
@@ -191,9 +189,7 @@ object S3ObjectOps {
     * @param awsRegion The AWS region you are operating in.
     * @return An `S3ObjectOps` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
-      blocker: Blocker,
-      awsRegion: Region
+  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](awsRegion: Region
   ): Resource[F, S3ObjectOps[G]] =
     PureS3Client.asyncIn[F, G](blocker, awsRegion).map(apply[G])
 }
