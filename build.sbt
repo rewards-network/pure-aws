@@ -6,7 +6,7 @@ val fs2V = "2.5.6"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.25"
 val monixV = "3.4.0"
-val collectionCompatV = "2.4.4"
+val collectionCompatV = "2.5.0"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
 val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
