@@ -4,7 +4,7 @@ val catsV = "2.6.1"
 val catsEffectV = "2.5.1"
 val fs2V = "2.5.6"
 val log4catsV = "1.2.0"
-val refinedV = "0.9.25"
+val refinedV = "0.9.27"
 val monixV = "3.4.0"
 val collectionCompatV = "2.4.4"
 
