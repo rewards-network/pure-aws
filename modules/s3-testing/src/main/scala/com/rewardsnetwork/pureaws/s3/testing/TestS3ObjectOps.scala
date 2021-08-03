@@ -3,7 +3,7 @@ package com.rewardsnetwork.pureaws.s3.testing
 import java.time.Instant
 
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 import com.rewardsnetwork.pureaws.s3._
 import fs2.Stream
 import software.amazon.awssdk.services.s3.model.RequestPayer

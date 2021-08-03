@@ -1,7 +1,7 @@
 package com.rewardsnetwork.pureaws.s3.testing
 
 import cats._
-import cats.implicits._
+import cats.syntax.all._
 import com.rewardsnetwork.pureaws.s3.{S3BucketPermission, S3BucketOps}
 import software.amazon.awssdk.services.s3.model._
 import com.rewardsnetwork.pureaws.s3.S3BucketInfo

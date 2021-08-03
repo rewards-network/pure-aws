@@ -10,6 +10,7 @@ import software.amazon.awssdk.services.s3.model.Owner
 final case class S3ObjectOwner(ownerDisplayName: String, ownerId: String)
 
 object S3ObjectOwner {
+
   /** Turn an `s3.model.Owner` into an `S3ObjectOwner` given owner of the object.
     *
     * @param owner The `s3.model.Owner` you are turning into an `S3ObjectOwner`.

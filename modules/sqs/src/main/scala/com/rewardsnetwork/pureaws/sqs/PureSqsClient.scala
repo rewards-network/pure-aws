@@ -4,7 +4,6 @@ import java.util.concurrent.CompletableFuture
 
 import cats.effect._
 import fs2.Stream
-import monix.catnap.syntax._
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.{SqsClient, SqsAsyncClient}
 import software.amazon.awssdk.services.sqs.model._
@@ -48,8 +47,8 @@ object PureSqsClient {
   /** Creates a new PureSqsClient given an existing `SqsClient`.
     * Note that you will have to close the client yourself when you are finished.
     */
-  def apply[F[_]: Sync: ContextShift](blocker: Blocker, client: SqsClient) = new PureSqsClient[F] {
-    private def block[A](f: => A): F[A] = blocker.blockOn(Sync[F].delay(f))
+  def apply[F[_]: Sync](client: SqsClient) = new PureSqsClient[F] {
+    private def block[A](f: => A): F[A] = Sync[F].blocking(f)
 
     def addPermission(r: AddPermissionRequest): F[AddPermissionResponse] = block {
       client.addPermission(r)
@@ -98,7 +97,7 @@ object PureSqsClient {
     * Note that you will have to close the client yourself when you are finished.
     */
   def apply[F[_]: Async](client: SqsAsyncClient) = new PureSqsClient[F] {
-    private def lift[A](f: => CompletableFuture[A]): F[A] = Sync[F].delay(f).futureLift
+    private def lift[A](f: => CompletableFuture[A]): F[A] = Async[F].fromCompletableFuture(Sync[F].delay(f))
     def addPermission(r: AddPermissionRequest): F[AddPermissionResponse] = lift {
       client.addPermission(r)
     }
@@ -138,45 +137,35 @@ object PureSqsClient {
 
   /** Creates a `PureSqsClient` using a synchronous backend with default settings.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureSqsClient` using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureSqsClient[F]] =
-    SqsClientBackend.sync[F](blocker, awsRegion)().map(apply[F](blocker, _))
+  def sync[F[_]: Sync](awsRegion: Region): Resource[F, PureSqsClient[F]] =
+    SqsClientBackend.sync[F](awsRegion)().map(apply[F](_))
 
   /** Creates a `PureSqsClient` using a synchronous backend with default settings.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureSqsClient` using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, PureSqsClient[G]] =
-    SqsClientBackend.sync[F](blocker, awsRegion)().map(apply[G](blocker, _))
+  def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, PureSqsClient[G]] =
+    SqsClientBackend.sync[F](awsRegion)().map(apply[G](_))
 
   /** Creates a `PureSqsClient` using an asynchronous backend with default settings.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureSqsClient[F]] =
-    SqsClientBackend.async[F](blocker, awsRegion)().map(apply[F])
+  def async[F[_]: Async](awsRegion: Region): Resource[F, PureSqsClient[F]] =
+    SqsClientBackend.async[F](awsRegion)().map(apply[F])
 
   /** Creates a `PureSqsClient` using an asynchronous backend with default settings.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, PureSqsClient[G]] =
-    SqsClientBackend.async[F](blocker, awsRegion)().map(apply[G])
+  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, PureSqsClient[G]] =
+    SqsClientBackend.async[F](awsRegion)().map(apply[G])
 }

@@ -117,19 +117,17 @@ object RefinedSqsClient {
 
   /** Constructs a `RefinedSqsClient` using an underlying synchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `RefinedSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, region: Region) =
-    PureSqsClient.sync[F](blocker, region).map(apply[F])
+  def sync[F[_]: Sync](region: Region) =
+    PureSqsClient.sync[F](region).map(apply[F])
 
   /** Constructs a `RefinedSqsClient` using an underlying asynchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `RefinedSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, region: Region) =
-    PureSqsClient.async[F](blocker, region).map(apply[F])
+  def async[F[_]: Async](region: Region) =
+    PureSqsClient.async[F](region).map(apply[F])
 }

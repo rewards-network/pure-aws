@@ -1,7 +1,7 @@
 package com.rewardsnetwork.pureaws.s3.testing
 
 import cats.effect.Sync
-import cats.implicits._
+import cats.syntax.all._
 import com.rewardsnetwork.pureaws.s3.S3Sink
 import fs2.{Pipe, Stream}
 

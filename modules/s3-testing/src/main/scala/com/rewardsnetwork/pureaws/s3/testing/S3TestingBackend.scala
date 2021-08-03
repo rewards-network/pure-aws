@@ -4,8 +4,8 @@ import java.time.Instant
 
 import cats.data.OptionT
 import cats.effect.Sync
-import cats.effect.concurrent.Ref
-import cats.implicits._
+import cats.effect.kernel.Ref
+import cats.syntax.all._
 import internal.newInstant
 import S3TestingBackend._
 

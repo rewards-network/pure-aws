@@ -1,17 +1,19 @@
 package com.rewardsnetwork.pureaws.s3.testing
 
+import java.time.Instant
+
+import cats.Traverse
+import cats.effect.unsafe.IORuntime
 import cats.effect.IO
 import cats.syntax.all._
 import org.scalatest.freespec.AnyFreeSpec
 import org.scalatest.matchers.should.Matchers
 import org.scalatestplus.scalacheck.ScalaCheckPropertyChecks
 import org.scalacheck.Gen
-import com.rewardsnetwork.pureaws.s3.S3ObjectInfo
-import java.time.Instant
-import com.rewardsnetwork.pureaws.s3.S3ObjectListing
-import cats.Traverse
+import com.rewardsnetwork.pureaws.s3.{S3ObjectInfo, S3ObjectListing}
 
 class TestS3ObjectOpsSpec extends AnyFreeSpec with Matchers with ScalaCheckPropertyChecks {
+  implicit val iort = IORuntime.global
 
   "TestS3ObjectOps" - {
     "listObjectsPaginated" - {

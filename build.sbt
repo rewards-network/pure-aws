@@ -1,15 +1,14 @@
 //Core deps
-val amazonV = "2.16.67"
+val amazonV = "2.17.11"
 val catsV = "2.6.1"
-val catsEffectV = "2.5.1"
-val fs2V = "2.5.6"
+val catsEffectV = "3.2.1"
+val fs2V = "3.0.6"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.25"
-val monixV = "3.4.0"
-val collectionCompatV = "2.4.4"
+val collectionCompatV = "2.5.0"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
-val catsEffect = "org.typelevel" %% "cats-effect" % catsEffectV
+val catsEffect = "org.typelevel" %% "cats-effect-std" % catsEffectV
 val fs2Core = "co.fs2" %% "fs2-core" % fs2V
 val fs2Io = "co.fs2" %% "fs2-io" % fs2V
 val fs2ReactiveStreams = "co.fs2" %% "fs2-reactive-streams" % fs2V
@@ -17,7 +16,6 @@ val awsSdkCore = "software.amazon.awssdk" % "sdk-core" % amazonV
 val awsSQS = "software.amazon.awssdk" % "sqs" % amazonV
 val awsS3 = "software.amazon.awssdk" % "s3" % amazonV
 val refined = "eu.timepit" %% "refined" % refinedV
-val monixCatnap = "io.monix" %% "monix-catnap" % monixV
 val collectionCompat =
   "org.scala-lang.modules" %% "scala-collection-compat" % collectionCompatV
 
@@ -107,7 +105,6 @@ lazy val sqs = (project in file("modules/sqs"))
     libraryDependencies ++= Seq(
       //Core deps
       awsSQS,
-      monixCatnap,
       //Test deps
       catsEffectLaws
     )
@@ -132,7 +129,6 @@ lazy val s3 = (project in file("modules/s3"))
       //Core deps
       awsS3,
       fs2Io,
-      monixCatnap,
       //Test deps
       catsEffectLaws
     )

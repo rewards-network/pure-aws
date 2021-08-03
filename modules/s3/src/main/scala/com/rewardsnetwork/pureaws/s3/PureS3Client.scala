@@ -4,10 +4,9 @@ import java.io.InputStream
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
-import cats.effect._
+import cats.effect.kernel.{Async, Sync, Resource}
 import com.rewardsnetwork.pureaws.Fs2AsyncResponseTransformer
 import fs2.Stream
-import monix.catnap.syntax._
 import software.amazon.awssdk.core.ResponseBytes
 import software.amazon.awssdk.core.async.{AsyncRequestBody, AsyncResponseTransformer}
 import software.amazon.awssdk.core.sync.RequestBody
@@ -123,13 +122,12 @@ object PureS3Client {
 
   /** Builds a PureS3Client from an AWS SDK `S3Client`.
     *
-    * @param blocker A Cats Effect `Blocker` for handling potentially blocking operations.
     * @param client A synchronous `S3Client` directly from the AWS SDK.
     * @return A shiny new `PureS3Client` with a synchronous backend.
     */
-  def apply[F[_]: Sync: ContextShift](blocker: Blocker, client: S3Client) =
+  def apply[F[_]: Sync](client: S3Client) =
     new PureS3Client[F] {
-      private def block[A](f: => A): F[A] = blocker.blockOn(Sync[F].delay(f))
+      private def block[A](f: => A): F[A] = Sync[F].blocking(f)
 
       def abortMultipartUpload(r: AbortMultipartUploadRequest): F[AbortMultipartUploadResponse] = {
         block(client.abortMultipartUpload(r))
@@ -149,7 +147,7 @@ object PureS3Client {
 
       def getObjectStream(r: GetObjectRequest): Stream[F, Byte] = {
         val res: F[InputStream] = block(client.getObject(r))
-        fs2.io.readInputStream(res, 4096, blocker, closeAfterUse = true)
+        fs2.io.readInputStream(res, 4096, closeAfterUse = true)
       }
 
       def getObjectBytes(r: GetObjectRequest): F[ResponseBytes[GetObjectResponse]] = {
@@ -187,9 +185,9 @@ object PureS3Client {
     * @param client An asynchronous `S3AsyncClient` directly from the AWS SDK.
     * @return A shiny new `PureS3Client` with an asynchronous backend.
     */
-  def apply[F[_]: ConcurrentEffect](client: S3AsyncClient) =
+  def apply[F[_]: Async](client: S3AsyncClient) =
     new PureS3Client[F] {
-      private def lift[A](f: => CompletableFuture[A]): F[A] = Sync[F].delay(f).futureLift
+      private def lift[A](f: => CompletableFuture[A]): F[A] = Async[F].fromCompletableFuture(Sync[F].delay(f))
 
       def abortMultipartUpload(r: AbortMultipartUploadRequest): F[AbortMultipartUploadResponse] = {
         lift(client.abortMultipartUpload(r))
@@ -246,45 +244,35 @@ object PureS3Client {
 
   /** Creates a `PureS3Client` using a synchronous backend with default settings.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
-    S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[F](blocker, _))
+  def sync[F[_]: Sync](awsRegion: Region): Resource[F, PureS3Client[F]] =
+    S3ClientBackend.sync[F](awsRegion)().map(apply[F](_))
 
   /** Creates a `PureS3Client` using a synchronous backend with default settings.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, PureS3Client[G]] =
-    S3ClientBackend.sync[F](blocker, awsRegion)().map(apply[G](blocker, _))
+  def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, PureS3Client[G]] =
+    S3ClientBackend.sync[F](awsRegion)().map(apply[G](_))
 
   /** Creates a `PureS3Client` using an asynchronous backend with default settings.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, PureS3Client[F]] =
-    S3ClientBackend.async[F](blocker, awsRegion)().map(apply[F])
+  def async[F[_]: Async](awsRegion: Region): Resource[F, PureS3Client[F]] =
+    S3ClientBackend.async[F](awsRegion)().map(apply[F])
 
   /** Creates a `PureS3Client` using an asynchronous backend with default settings.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, PureS3Client[G]] =
-    S3ClientBackend.async[F](blocker, awsRegion)().map(apply[G])
+  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, PureS3Client[G]] =
+    S3ClientBackend.async[F](awsRegion)().map(apply[G])
 }

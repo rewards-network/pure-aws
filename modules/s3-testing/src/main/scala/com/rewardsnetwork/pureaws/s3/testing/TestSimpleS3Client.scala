@@ -1,7 +1,7 @@
 package com.rewardsnetwork.pureaws.s3.testing
 
 import cats.effect._
-import cats.implicits._
+import cats.syntax.all._
 
 /** All available test helpers for S3 at once. */
 sealed trait TestSimpleS3Client[F[_]] {

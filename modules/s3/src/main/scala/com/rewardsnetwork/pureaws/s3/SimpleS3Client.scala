@@ -1,6 +1,6 @@
 package com.rewardsnetwork.pureaws.s3
 
-import cats.effect._
+import cats.effect.kernel._
 import cats.MonadError
 import software.amazon.awssdk.regions.Region
 
@@ -26,45 +26,35 @@ object SimpleS3Client {
 
   /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
-    PureS3Client.sync[F](blocker, awsRegion).map(apply[F])
+  def sync[F[_]: Sync](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
+    PureS3Client.sync[F](awsRegion).map(apply[F])
 
   /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, SimpleS3Client[G]] =
-    PureS3Client.syncIn[F, G](blocker, awsRegion).map(apply[G])
+  def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, SimpleS3Client[G]] =
+    PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def async[F[_]: ConcurrentEffect: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleS3Client[F]] =
-    PureS3Client.async[F](blocker, awsRegion).map(apply[F])
+  def async[F[_]: Async](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
+    PureS3Client.async[F](awsRegion).map(apply[F])
 
   /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleS3Client` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: ConcurrentEffect](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, SimpleS3Client[G]] =
-    PureS3Client.asyncIn[F, G](blocker, awsRegion).map(apply[G])
+  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, SimpleS3Client[G]] =
+    PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])
 }
