@@ -1,6 +1,6 @@
 package com.rewardsnetwork.pureaws.sqs
 
-import cats.implicits._
+import cats.syntax.all._
 import cats.effect._
 import fs2.Stream
 import software.amazon.awssdk.regions.Region
@@ -74,7 +74,9 @@ object SimpleSqsClient {
 
     client
       .receiveMessageStream(reqWithMaybeAttrs)
-      .flatMap[F, Message](res => Stream.fromIterator[F](res.messages.iterator.asScala))
+      .flatMap[F, Message](res =>
+        Stream.fromIterator[F](res.messages.iterator.asScala, 1024)
+      ) //TODO: make the chunk size configurable
   }
 
   def apply[F[_]: Sync](client: PureSqsClient[F]) =
@@ -142,45 +144,35 @@ object SimpleSqsClient {
 
   /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return An `SimpleSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
-    PureSqsClient.sync[F](blocker, awsRegion).map(apply[F])
+  def sync[F[_]: Sync](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
+    PureSqsClient.sync[F](awsRegion).map(apply[F])
 
   /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return An `SimpleSqsClient` instance using a synchronous backend.
     */
-  def syncIn[F[_]: Sync: ContextShift, G[_]: Sync: ContextShift](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, SimpleSqsClient[G]] =
-    PureSqsClient.syncIn[F, G](blocker, awsRegion).map(apply[G])
+  def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, SimpleSqsClient[G]] =
+    PureSqsClient.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async: ContextShift](blocker: Blocker, awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
-    PureSqsClient.async[F](blocker, awsRegion).map(apply[F])
+  def async[F[_]: Async](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
+    PureSqsClient.async[F](awsRegion).map(apply[F])
 
   /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
     * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param blocker A Cats Effect `Blocker`.
     * @param awsRegion The AWS region you are operating in.
     * @return A `SimpleSqsClient` instance using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync: ContextShift, G[_]: Async](
-      blocker: Blocker,
-      awsRegion: Region
-  ): Resource[F, SimpleSqsClient[G]] =
-    PureSqsClient.asyncIn[F, G](blocker, awsRegion).map(apply[G])
+  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, SimpleSqsClient[G]] =
+    PureSqsClient.asyncIn[F, G](awsRegion).map(apply[G])
 }

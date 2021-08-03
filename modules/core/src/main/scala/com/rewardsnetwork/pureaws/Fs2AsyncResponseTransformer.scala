@@ -3,10 +3,9 @@ package com.rewardsnetwork.pureaws
 import java.nio.ByteBuffer
 import java.util.concurrent.CompletableFuture
 
-import fs2.Stream
+import cats.effect.kernel.Async
+import fs2.{Chunk, Stream}
 import software.amazon.awssdk.core.async.{AsyncResponseTransformer, SdkPublisher}
-import fs2.Chunk
-import cats.effect.ConcurrentEffect
 
 /** An implementation of the `AsyncResponseTransformer` interface, but using FS2 Stream */
 trait Fs2AsyncResponseTransformer[F[_], A] extends AsyncResponseTransformer[A, (A, Stream[F, Byte])] {
@@ -22,7 +21,7 @@ trait Fs2AsyncResponseTransformer[F[_], A] extends AsyncResponseTransformer[A, (
 object Fs2AsyncResponseTransformer {
 
   /** Creates an `Fs2AsyncResponseTransformer` that returns your response object as well as a stream of bytes. */
-  def apply[F[_]: ConcurrentEffect, A]: Fs2AsyncResponseTransformer[F, A] =
+  def apply[F[_]: Async, A]: Fs2AsyncResponseTransformer[F, A] =
     new Fs2AsyncResponseTransformer[F, A] {
 
       private val cf: CompletableFuture[Stream[F, Byte]] = new CompletableFuture[Stream[F, Byte]]()

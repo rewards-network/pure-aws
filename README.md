@@ -46,17 +46,15 @@ Each one adds enhancements on top of the other, and the base libraries feature b
 
 For example, here is how you create an S3 and SQS client:
 ```scala
-import cats.effect.{Blocker, IO}
+import cats.effect.{IO, Resource}
 import com.rewardsnetwork.pureaws.s3.PureS3Client
 import com.rewardsnetwork.pureaws.sqs.PureSqsClient
 import software.amazon.awssdk.regions.Region
 
-Blocker[IO].flatMap { blocker => //Everything needs a Blocker
-  val region = Region.US_EAST_1
+val region = Region.US_EAST_1
 
-  val pureS3clientResource = PureS3Client.async[IO](blocker, region)
-  val pureSQSclientResource = PureSqsClient.async[IO](blocker, region)
-}
+val pureS3clientResource: Resource[IO, PureS3Client[IO]] = PureS3Client.async[IO](region)
+val pureSQSclientResource: Resource[IO, PureSqsClient[IO]] = PureSqsClient.async[IO](region)
 ```
 
 The "Pure" clients for each library have Sync/Async variants, based on the underlying AWS client.
@@ -79,7 +77,7 @@ For modularity and separation of concerns, we've separated out the client types 
 ```scala
 import com.rewardsnetwork.pureaws.SimpleS3Client
 
-val s3ClientResource: Resource[IO, SimpleS3Client[IO]] = Blocker[IO].flatMap(SimpleS3Client.async[IO](_, region))
+val s3ClientResource: Resource[IO, SimpleS3Client[IO]] = SimpleS3Client.async[IO](region)
 
 s3ClientResource.use { client =>
   ///Access each of the clients within here
@@ -95,7 +93,7 @@ Perform basic operations on S3 buckets and objects, available at `SimpleS3Client
 import com.rewardsnetwork.pureaws.{S3BucketOps, S3ObjectOps}
 import software.amazon.awssdk.services.s3.model.BucketLocationConstraint
 
-val pureClient: Resource[IO, PureS3Client[IO]] = Blocker[IO].flatMap(PureS3Client.async[IO](_, region))
+val pureClient: Resource[IO, PureS3Client[IO]] = PureS3Client.async[IO](region)
 val bucketAndObjectOps = pureClient.map(p => S3BucketOps(p) -> S3ObjectOps(p))
 
 bucketAndObjectOps.use { case (bucketOps, objectOps) =>
@@ -122,7 +120,7 @@ Write S3 objects using S3 (multipart not currently supported), available at `Sim
 ```scala
 import com.rewardsnetwork.pureaws.S3Sink
 
-val sinkResource: Resource[IO, S3Sink[IO]] = Blocker[IO].flatMap(S3Sink.async[IO](_, region))
+val sinkResource: Resource[IO, S3Sink[IO]] = S3Sink.async[IO](_, region)
 
 sinkResource.use { sink =>
   Stream("hello", "world", "and all who inhabit it")
@@ -139,7 +137,7 @@ Stream S3 objects from S3 as bytes, available at `SimpleS3Client#source` or by i
 ```scala
 import com.rewardsnetwork.pureaws.S3Source
 
-val sourceResource: Resource[IO, S3Source[IO]] = Blocker[IO].flatMap(S3Source.async[IO](_, region))
+val sourceResource: Resource[IO, S3Source[IO]] = S3Source.async[IO](region)
 
 Stream.resource(sourceResource).flatMap { source =>
   //Stream bytes from an object
@@ -169,7 +167,7 @@ The preferred way to use `pureaws-sqs` is to pull in the Simple client with an A
 ```scala
 import com.rewardsnetwork.pureaws.sqs.SimpleSqsClient
 
-val client: Resource[IO, SimpleSqsClient[IO]] = SimpleSqsClient.async[IO](blocker, region)
+val client: Resource[IO, SimpleSqsClient[IO]] = SimpleSqsClient.async[IO](region)
 client.use { c =>
   c.streamMessages("url-to-my-queue", maxMessages = 10).take(3).compile.drain.as(ExitCode.Success)
 }

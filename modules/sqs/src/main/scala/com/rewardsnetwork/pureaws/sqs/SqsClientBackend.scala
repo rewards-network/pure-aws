@@ -10,20 +10,20 @@ object SqsClientBackend {
   /** Builds a raw AWS `SqsClient` (synchronous).
     * Prefer to use `PureSqsClient` instead, where possible.
     */
-  def sync[F[_]: Sync: ContextShift](blocker: Blocker, region: Region)(
+  def sync[F[_]: Sync](region: Region)(
       configure: SqsClientBuilder => SqsClientBuilder = identity
   ) =
-    Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay {
+    Resource.fromAutoCloseable(Sync[F].blocking {
       configure(SqsClient.builder.region(region)).build
     })
 
   /** Builds a raw AWS `SqsAsyncClient`.
     * Prefer to use `PureSqsClient` instead, where possible.
     */
-  def async[F[_]: Sync: ContextShift](blocker: Blocker, region: Region)(
+  def async[F[_]: Sync](region: Region)(
       configure: SqsAsyncClientBuilder => SqsAsyncClientBuilder = identity
   ) =
-    Resource.fromAutoCloseableBlocking(blocker)(Sync[F].delay {
+    Resource.fromAutoCloseable(Sync[F].blocking {
       configure(SqsAsyncClient.builder.region(region)).build
     })
 }
