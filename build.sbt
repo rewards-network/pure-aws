@@ -20,25 +20,24 @@ val collectionCompat =
   "org.scala-lang.modules" %% "scala-collection-compat" % collectionCompatV
 
 //Test/build deps
-val scalaTestV = "3.2.9"
+val munitV = "0.7.27"
+val munitCatsEffectV = "1.0.5"
 val scalaCheckV = "1.15.4"
-val scalaTestScalacheckV = "3.2.2.0"
-val betterMonadicForV = "0.3.1"
-val flexmarkV = "0.35.10" // scala-steward:off
+val scalaCheckEffectV = "1.0.2"
 
 val catsEffectLaws =
   "org.typelevel" %% "cats-effect-laws" % catsEffectV % "test"
 val log4catsTesting =
   "io.chrisdavenport" %% "log4cats-testing" % log4catsV % "test"
-val scalatest = "org.scalatest" %% "scalatest" % scalaTestV % "test"
-val scalacheck = "org.scalacheck" %% "scalacheck" % scalaCheckV % "test"
-val scalatestPlusScalacheck =
-  "org.scalatestplus" %% "scalacheck-1-14" % scalaTestScalacheckV % "test"
-val flexmark = "com.vladsch.flexmark" % "flexmark-all" % flexmarkV % "test"
+val munitCatsEffect = "org.typelevel" %% "munit-cats-effect-3" % munitCatsEffectV % "test"
+val munitScalacheck = "org.scalameta" %% "munit-scalacheck" % munitV
+val scalaCheck = "org.scalacheck" %% "scalacheck" % scalaCheckV % "test"
+val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheckEffectV % "test"
 
 //Scala versions supported
 val scala213 = "2.13.6"
 val scala212 = "2.12.13"
+val scala3 = "3.0.0"
 
 // Project setup
 inThisBuild(
@@ -64,24 +63,18 @@ inThisBuild(
       )
     ),
     scalaVersion := scala213,
-    crossScalaVersions := Seq(scala213, scala212)
+    crossScalaVersions := Seq(scala3, scala213, scala212)
   )
-)
-
-val commonSettings = Seq(
-  addCompilerPlugin("com.olegpy" %% "better-monadic-for" % betterMonadicForV)
 )
 
 lazy val root = (project in file("."))
   .settings(
-    commonSettings,
     publish / skip := true
   )
   .aggregate(core, sqs, sqsRefined, s3, s3Testing)
 
 lazy val core = (project in file("modules/core"))
   .settings(
-    commonSettings,
     name := "pure-aws-core",
     libraryDependencies ++= Seq(
       awsSdkCore,
@@ -91,16 +84,15 @@ lazy val core = (project in file("modules/core"))
       fs2Core,
       fs2ReactiveStreams,
       //Test deps
-      scalatest,
-      scalacheck,
-      scalatestPlusScalacheck,
-      flexmark
+      munitCatsEffect,
+      munitScalacheck,
+      scalaCheck,
+      scalaCheckEffect
     )
   )
 
 lazy val sqs = (project in file("modules/sqs"))
   .settings(
-    commonSettings,
     name := "pure-aws-sqs",
     libraryDependencies ++= Seq(
       //Core deps
@@ -113,7 +105,6 @@ lazy val sqs = (project in file("modules/sqs"))
 
 lazy val sqsRefined = (project in file("modules/sqs-refined"))
   .settings(
-    commonSettings,
     name := "pure-aws-sqs-refined",
     libraryDependencies ++= Seq(
       refined
@@ -123,7 +114,6 @@ lazy val sqsRefined = (project in file("modules/sqs-refined"))
 
 lazy val s3 = (project in file("modules/s3"))
   .settings(
-    commonSettings,
     name := "pure-aws-s3",
     libraryDependencies ++= Seq(
       //Core deps
@@ -137,7 +127,6 @@ lazy val s3 = (project in file("modules/s3"))
 
 lazy val s3Testing = (project in file("modules/s3-testing"))
   .settings(
-    commonSettings,
     name := "pure-aws-s3-testing"
   )
   .dependsOn(s3 % "compile->compile;test->test")
