@@ -165,11 +165,14 @@ Stream.resource(sourceResource).flatMap { source =>
 The preferred way to use `pureaws-sqs` is to pull in the Simple client with an Async backend.
 
 ```scala
-import com.rewardsnetwork.pureaws.sqs.SimpleSqsClient
+import com.rewardsnetwork.pureaws.sqs.{SimpleSqsClient, StreamMessageSettings}
 
 val client: Resource[IO, SimpleSqsClient[IO]] = SimpleSqsClient.async[IO](region)
 client.use { c =>
-  c.streamMessages("url-to-my-queue", maxMessages = 10).take(3).compile.drain.as(ExitCode.Success)
+  //Customize your settings using this case class
+  val settings = StreamMessageSettings.default.copy(maxMessages = 5)
+
+  c.streamMessages("url-to-my-queue", settings).take(3).compile.drain.as(ExitCode.Success)
 }
 ```
 
