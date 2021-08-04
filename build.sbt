@@ -108,7 +108,14 @@ lazy val sqsRefined = (project in file("modules/sqs-refined"))
     name := "pure-aws-sqs-refined",
     libraryDependencies ++= Seq(
       refined
-    )
+    ),
+    Compile / unmanagedSourceDirectories ++= {
+      def dir(s: String) = baseDirectory.value / "src" / "main" / s"scala$s"
+
+      if (scalaVersion.value.startsWith("2.13")) List(dir("-2.13+"))
+      else if (scalaVersion.value.startsWith("3")) List(dir("-2.13+"))
+      else Nil
+    }
   )
   .dependsOn(sqs % "compile->compile;test->test")
 

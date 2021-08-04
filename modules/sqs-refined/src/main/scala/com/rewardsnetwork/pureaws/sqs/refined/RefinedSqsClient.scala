@@ -3,10 +3,10 @@ package com.rewardsnetwork.pureaws.sqs.refined
 import cats.effect._
 import com.rewardsnetwork.pureaws.sqs._
 import fs2.Stream
-import eu.timepit.refined.auto._
 import software.amazon.awssdk.regions.Region
 
 import scala.jdk.CollectionConverters._
+import eu.timepit.refined.api.Refined
 
 /** A version of `SimpleSqsClient` that has refined versions of method parameters. */
 trait RefinedSqsClient[F[_]] {
@@ -18,17 +18,13 @@ trait RefinedSqsClient[F[_]] {
     */
   def streamMessages(
       queueUrl: String,
-      maxMessages: MaxMessages = 10,
-      visibilityTimeoutSeconds: VisibilityTimeout = 30,
-      waitTimeSeconds: IntNonNegative = 0
+      settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
   ): Stream[F, RefinedMessage[F]]
 
   /** Like `streamMessages`, but also pairs each message with its attributes. */
   def streamMessagesWithAttributes(
       queueUrl: String,
-      maxMessages: MaxMessages = 10,
-      visibilityTimeoutSeconds: VisibilityTimeout = 30,
-      waitTimeSeconds: IntNonNegative = 0
+      settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
   ): Stream[F, RefinedMessageWithAttributes[F]]
 
   /** Change a message's visibility timeout to the specified value. */
@@ -48,7 +44,7 @@ trait RefinedSqsClient[F[_]] {
   /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message.
     * @return The message ID string of the sent message.
     */
-  def sendMessage(queueUrl: String, messageBody: String, delaySeconds: DelaySeconds): F[String]
+  def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String]
 
 }
 
@@ -58,31 +54,27 @@ object RefinedSqsClient {
       private val simpleClient = SimpleSqsClient(pureClient)
       def streamMessages(
           queueUrl: String,
-          maxMessages: MaxMessages,
-          visibilityTimeoutSeconds: VisibilityTimeout,
-          waitTimeSeconds: IntNonNegative
+          settings: RefinedStreamMessageSettings
       ): Stream[F, RefinedMessage[F]] =
         SimpleSqsClient
           .streamMessagesInternal(pureClient)(
             queueUrl,
-            maxMessages.value,
-            visibilityTimeoutSeconds.value,
-            waitTimeSeconds.value
+            settings.maxMessages.value,
+            settings.visibilityTimeoutSeconds.value,
+            settings.waitTimeSeconds.value
           )
           .map(message => RefinedMessage(message.body, RefinedReceiptHandle(message.receiptHandle, queueUrl, this)))
 
       def streamMessagesWithAttributes(
           queueUrl: String,
-          maxMessages: MaxMessages,
-          visibilityTimeoutSeconds: VisibilityTimeout,
-          waitTimeSeconds: IntNonNegative
+          settings: RefinedStreamMessageSettings
       ): Stream[F, RefinedMessageWithAttributes[F]] =
         SimpleSqsClient
           .streamMessagesInternal(pureClient)(
             queueUrl,
-            maxMessages.value,
-            visibilityTimeoutSeconds.value,
-            waitTimeSeconds.value
+            settings.maxMessages.value,
+            settings.visibilityTimeoutSeconds.value,
+            settings.waitTimeSeconds.value
           )
           .map { m =>
             val attributes = MessageAttributes.fromMap(m.attributes().asScala.toMap)
@@ -110,7 +102,7 @@ object RefinedSqsClient {
       def sendMessage(queueUrl: String, messageBody: String): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody)
 
-      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: DelaySeconds): F[String] =
+      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
 
     }

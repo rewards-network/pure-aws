@@ -13,31 +13,28 @@ trait SimpleSqsClient[F[_]] {
   /** Get a stream of messages from a queue URL.
     * Each message is emitted as an individual `String`.
     *
-    * Valid `maxMessages` values are 1 -> 10.
-    * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours)
-    * Valid `waitTimeSeconds` values are all positive integers.
+    * Settings is a set of common settings for streaming messages, as follows:
+    * * Valid `maxMessages` values are 1 -> 10.
+    * * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours)
+    * * Valid `waitTimeSeconds` values are all positive integers.
     *
-    * For compile-time and run-time type-checking of these parameters, please use the `fs2-sqs-refined` library instead.
+    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library instead.
     */
   def streamMessages(
       queueUrl: String,
-      maxMessages: Int = 10,
-      visibilityTimeoutSeconds: Int = 30,
-      waitTimeSeconds: Int = 0
+      settings: StreamMessageSettings = StreamMessageSettings.default
   ): Stream[F, SqsMessage[F]]
 
   /** Like `streamMessages`, but also pairs each message with its attributes. */
   def streamMessagesWithAttributes(
       queueUrl: String,
-      maxMessages: Int = 10,
-      visibilityTimeoutSeconds: Int = 30,
-      waitTimeSeconds: Int = 0
+      settings: StreamMessageSettings = StreamMessageSettings.default
   ): Stream[F, SqsMessageWithAttributes[F]]
 
   /** Change a message's visibility timeout to the specified value.
     * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours)
     *
-    * For compile-time and run-time type-checking of these parameters, please use the `fs2-sqs-refined` library instead.
+    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library instead.
     */
   def changeMessageVisibility(visibilityTimeoutSeconds: Int, rawReceiptHandle: String, queueUrl: String): F[Unit]
 
@@ -84,25 +81,24 @@ object SimpleSqsClient {
 
       def streamMessages(
           queueUrl: String,
-          maxMessages: Int,
-          visibilityTimeoutSeconds: Int,
-          waitTimeSeconds: Int
+          settings: StreamMessageSettings
       ): Stream[F, SqsMessage[F]] =
-        streamMessagesInternal(client)(queueUrl, maxMessages, visibilityTimeoutSeconds, waitTimeSeconds).map(m =>
-          SqsMessage(m.body, ReceiptHandle(m.receiptHandle, queueUrl, this))
-        )
+        streamMessagesInternal(client)(
+          queueUrl,
+          settings.maxMessages,
+          settings.visibilityTimeoutSeconds,
+          settings.waitTimeSeconds
+        ).map(m => SqsMessage(m.body, ReceiptHandle(m.receiptHandle, queueUrl, this)))
 
       def streamMessagesWithAttributes(
           queueUrl: String,
-          maxMessages: Int,
-          visibilityTimeoutSeconds: Int,
-          waitTimeSeconds: Int
+          settings: StreamMessageSettings
       ): Stream[F, SqsMessageWithAttributes[F]] = {
         streamMessagesInternal(client)(
           queueUrl,
-          maxMessages,
-          visibilityTimeoutSeconds,
-          waitTimeSeconds,
+          settings.maxMessages,
+          settings.visibilityTimeoutSeconds,
+          settings.waitTimeSeconds,
           receiveAttrs = true
         ).map { m =>
           val attributes = MessageAttributes.fromMap(m.attributes().asScala.toMap)
