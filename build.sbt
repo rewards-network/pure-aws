@@ -63,7 +63,8 @@ inThisBuild(
       )
     ),
     scalaVersion := scala213,
-    crossScalaVersions := Seq(scala3, scala213, scala212)
+    // crossScalaVersions := Seq(scala3, scala213, scala212)
+    crossScalaVersions := Seq(scala213, scala212)
   )
 )
 
