@@ -1,8 +1,8 @@
 //Core deps
-val amazonV = "2.17.11"
+val amazonV = "2.17.14"
 val catsV = "2.6.1"
 val catsEffectV = "3.2.2"
-val fs2V = "3.0.6"
+val fs2V = "3.1.0"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.25"
 val collectionCompatV = "2.5.0"
@@ -63,7 +63,8 @@ inThisBuild(
       )
     ),
     scalaVersion := scala213,
-    crossScalaVersions := Seq(scala3, scala213, scala212)
+    // crossScalaVersions := Seq(scala3, scala213, scala212)
+    crossScalaVersions := Seq(scala213, scala212)
   )
 )
 

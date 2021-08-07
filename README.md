@@ -12,7 +12,8 @@ Currently includes the following modules, with more to come:
 * `pure-aws-sqs-refined`: Builds on top of `pure-aws-sqs` with `refined` integration for type-safe method parameters.
 
 ## Setup
-This library is published for Scala 3, 2.13, and 2.12.
+This library is published for Scala 2.13 and 2.12.
+Scala 3 support is pending a compiler bugfix where it does not play nice with the AWS SDK when generating scaladoc.
 ```
 libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 ```
