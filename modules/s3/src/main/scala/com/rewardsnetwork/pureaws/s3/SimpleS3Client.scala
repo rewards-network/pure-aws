@@ -14,8 +14,8 @@ sealed trait SimpleS3Client[F[_]] {
 
 object SimpleS3Client {
 
-  /** Constructs a `SimpleS3Client` using an existing `PureS3Client` for some `F[_]`.
-    * Gives you access to all available algebras for the S3 client in one place.
+  /** Constructs a `SimpleS3Client` using an existing `PureS3Client` for some `F[_]`. Gives you access to all available
+    * algebras for the S3 client in one place.
     */
   def apply[F[_]](client: PureS3Client[F])(implicit F: MonadError[F, Throwable]) = new SimpleS3Client[F] {
     val bucketOps = S3BucketOps(client)
@@ -26,34 +26,42 @@ object SimpleS3Client {
 
   /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleS3Client` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleS3Client` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs a `SimpleS3Client` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs a `SimpleS3Client` using an underlying synchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleS3Client` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleS3Client` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, SimpleS3Client[G]] =
     PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleS3Client` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleS3Client` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, SimpleS3Client[F]] =
     PureS3Client.async[F](awsRegion).map(apply[F])
 
-  /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs a `SimpleS3Client` using an underlying asynchronous client backend. This variant allows for creating
+    * the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleS3Client` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleS3Client` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, SimpleS3Client[G]] =
     PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])

@@ -7,9 +7,9 @@ import fs2.Stream
 
 import scala.concurrent.duration.FiniteDuration
 
-/** The underlying abstraction for consuming a message from SQS.
-  * The `T` parameter represents the type for changing the visibility timeout in seconds.
-  * In the base module, this is an `Int`, but in the refined module, it is a bounded positive integer, for safety.
+/** The underlying abstraction for consuming a message from SQS. The `T` parameter represents the type for changing the
+  * visibility timeout in seconds. In the base module, this is an `Int`, but in the refined module, it is a bounded
+  * positive integer, for safety.
   */
 trait BaseSqsMessage[F[_], T] {
   val body: String
@@ -22,8 +22,8 @@ trait BaseSqsMessage[F[_], T] {
       case false => Applicative[F].unit
     }
 
-  /** The same as `autoDelete`, but while concurrently changing the message visibility to the specified value every specified number of seconds.
-    * Once the message is processed, the message should no longer be renewed.
+  /** The same as `autoDelete`, but while concurrently changing the message visibility to the specified value every
+    * specified number of seconds. Once the message is processed, the message should no longer be renewed.
     */
   def autoDeleteAndRenew(renewEvery: FiniteDuration, visibilityTimeoutSeconds: T)(
       shouldDelete: F[Boolean]
@@ -72,9 +72,8 @@ trait WithAttributes {
   val attributes: MessageAttributes
 }
 
-/** A message received from AWS SQS.
-  * Visibility timeout is in integer seconds.
-  * Possibly unsafe as it allows non-positive values, or values over 12 hours.
+/** A message received from AWS SQS. Visibility timeout is in integer seconds. Possibly unsafe as it allows non-positive
+  * values, or values over 12 hours.
   */
 final case class SqsMessage[F[_]](
     body: String,

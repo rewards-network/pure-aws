@@ -12,11 +12,13 @@ sealed trait TestSimpleS3Client[F[_]] {
 
 object TestSimpleS3Client {
 
-  /** Constructs a `SimpleS3Client` using an existing `PureS3Client` for some `F[_]`.
-    * Gives you access to all available algebras for the S3 client in one place.
+  /** Constructs a `SimpleS3Client` using an existing `PureS3Client` for some `F[_]`. Gives you access to all available
+    * algebras for the S3 client in one place.
     *
-    * @param backend Your `S3TestingBackend`.
-    * @param failWith An optional `Throwable` that you would like all requests to fail with, to test error recovery.
+    * @param backend
+    *   Your `S3TestingBackend`.
+    * @param failWith
+    *   An optional `Throwable` that you would like all requests to fail with, to test error recovery.
     */
   def apply[F[_]: Sync](backend: S3TestingBackend[F], failWith: Option[Throwable] = none) = new TestSimpleS3Client[F] {
     val ops = new TestS3ObjectOps(backend, failWith)

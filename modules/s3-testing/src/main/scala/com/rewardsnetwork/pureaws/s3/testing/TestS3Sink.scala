@@ -7,9 +7,12 @@ import fs2.{Pipe, Stream}
 
 /** A test utility for integrating with the `S3Sink` algebra.
   *
-  * @param backend Your `S3TestingBackend`.
-  * @param failWith An optional `Throwable` that you would like all requests to fail with, to test error recovery.
-  * @param emitEtag An iterator of strings for sequentially assigning eTags. Defaults to the sequence 0, 1, 2... as strings.
+  * @param backend
+  *   Your `S3TestingBackend`.
+  * @param failWith
+  *   An optional `Throwable` that you would like all requests to fail with, to test error recovery.
+  * @param emitEtag
+  *   An iterator of strings for sequentially assigning eTags. Defaults to the sequence 0, 1, 2... as strings.
   */
 class TestS3Sink[F[_]: Sync](
     backend: S3TestingBackend[F],

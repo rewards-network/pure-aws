@@ -9,13 +9,13 @@ trait BaseReceiptHandle[F[_], T] {
   /** The raw Queue URL string */
   val queueUrl: String
 
-  /** Delete the message this `ReceiptHandle` is attached to from SQS.
-    * Used to signal that the message was consumed/processed successfully.
+  /** Delete the message this `ReceiptHandle` is attached to from SQS. Used to signal that the message was
+    * consumed/processed successfully.
     */
   val delete: F[Unit]
 
-  /** Change the visibility timeout for the message this `ReceiptHandle` is attached to.
-    * Type `T` is dependent on the underlying client's visibility timeout parameter type.
+  /** Change the visibility timeout for the message this `ReceiptHandle` is attached to. Type `T` is dependent on the
+    * underlying client's visibility timeout parameter type.
     */
   def changeVisibility(visibilityTimeout: T): F[Unit]
 }

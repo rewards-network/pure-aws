@@ -8,8 +8,10 @@ import fs2.Stream
 
 /** A test utility for integrating with the `S3Source` algebra.
   *
-  * @param backend Your `S3TestingBackend`.
-  * @param failWith An optional `Throwable` that you would like all requests to fail with, to test error recovery.
+  * @param backend
+  *   Your `S3TestingBackend`.
+  * @param failWith
+  *   An optional `Throwable` that you would like all requests to fail with, to test error recovery.
   */
 class TestS3Source[F[_]: Sync](backend: S3TestingBackend[F], failWith: Option[Throwable] = none) extends S3Source[F] {
   private def doOrFail[A](fa: F[A]): F[A] = failWith match {
