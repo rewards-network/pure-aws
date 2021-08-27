@@ -37,7 +37,7 @@ val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheck
 //Scala versions supported
 val scala213 = "2.13.6"
 val scala212 = "2.12.13"
-val scala3 = "3.0.0"
+val scala3 = "3.0.1"
 
 // Project setup
 inThisBuild(
@@ -63,8 +63,8 @@ inThisBuild(
       )
     ),
     scalaVersion := scala213,
-    // crossScalaVersions := Seq(scala3, scala213, scala212)
-    crossScalaVersions := Seq(scala213, scala212)
+    crossScalaVersions := Seq(scala3, scala213, scala212)
+    // crossScalaVersions := Seq(scala213, scala212)
   )
 )
 
@@ -129,7 +129,11 @@ lazy val s3 = (project in file("modules/s3"))
       fs2Io,
       //Test deps
       catsEffectLaws
-    )
+    ),
+    Compile / doc / sources := {
+      if (scalaVersion.value.startsWith("3")) Nil
+      else (Compile / doc / sources).value
+    }
   )
   .dependsOn(core % "compile->compile;test->test")
 
