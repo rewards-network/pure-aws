@@ -20,7 +20,7 @@ val collectionCompat =
   "org.scala-lang.modules" %% "scala-collection-compat" % collectionCompatV
 
 //Test/build deps
-val munitV = "0.7.27"
+val munitV = "0.7.28"
 val munitCatsEffectV = "1.0.5"
 val scalaCheckV = "1.15.4"
 val scalaCheckEffectV = "1.0.2"
