@@ -40,8 +40,10 @@ object S3TestingBackend {
 
   /** An in-memory fake S3 backend.
     *
-    * @param autoCreateBuckets Whether or not to automatically assume there is a bucket for each new object uploaded. Defaults to `true`.
-    * @return An `F[S3TestingBackend]` for plugging into other test utilities in the S3 Testing module.
+    * @param autoCreateBuckets
+    *   Whether or not to automatically assume there is a bucket for each new object uploaded. Defaults to `true`.
+    * @return
+    *   An `F[S3TestingBackend]` for plugging into other test utilities in the S3 Testing module.
     */
   def inMemory[F[_]: Sync](autoCreateBuckets: Boolean = true) =
     Ref[F].of[BucketMap](Map.empty).map { ref =>

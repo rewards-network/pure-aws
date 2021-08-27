@@ -10,15 +10,14 @@ import scala.jdk.CollectionConverters._
 
 trait SimpleSqsClient[F[_]] {
 
-  /** Get a stream of messages from a queue URL.
-    * Each message is emitted as an individual `String`.
+  /** Get a stream of messages from a queue URL. Each message is emitted as an individual `String`.
     *
-    * Settings is a set of common settings for streaming messages, as follows:
-    * * Valid `maxMessages` values are 1 -> 10.
-    * * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours)
-    * * Valid `waitTimeSeconds` values are all positive integers.
+    * Settings is a set of common settings for streaming messages, as follows: * Valid `maxMessages` values are 1 -> 10.
+    * * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours) * Valid `waitTimeSeconds` values are all
+    * positive integers.
     *
-    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library instead.
+    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library
+    * instead.
     */
   def streamMessages(
       queueUrl: String,
@@ -31,10 +30,11 @@ trait SimpleSqsClient[F[_]] {
       settings: StreamMessageSettings = StreamMessageSettings.default
   ): Stream[F, SqsMessageWithAttributes[F]]
 
-  /** Change a message's visibility timeout to the specified value.
-    * Valid `visibilityTimeoutSeconds` values are 0 -> 43200 (12 hours)
+  /** Change a message's visibility timeout to the specified value. Valid `visibilityTimeoutSeconds` values are 0 ->
+    * 43200 (12 hours)
     *
-    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library instead.
+    * For compile-time and run-time type-checking of these parameters, please use the `pure-aws-sqs-refined` library
+    * instead.
     */
   def changeMessageVisibility(visibilityTimeoutSeconds: Int, rawReceiptHandle: String, queueUrl: String): F[Unit]
 
@@ -42,12 +42,15 @@ trait SimpleSqsClient[F[_]] {
   def deleteMessage(rawReceiptHandle: String, queueUrl: String): F[Unit]
 
   /** Send a message to an SQS queue. Message delay is determined by the queue settings.
-    * @return The message ID string of the sent message.
+    * @return
+    *   The message ID string of the sent message.
     */
   def sendMessage(queueUrl: String, messageBody: String): F[String]
 
-  /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message (valid values between 0 and 900).
-    * @return The message ID string of the sent message.
+  /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message (valid values between 0 and
+    * 900).
+    * @return
+    *   The message ID string of the sent message.
     */
   def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int): F[String]
 
@@ -140,34 +143,42 @@ object SimpleSqsClient {
 
   /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `SimpleSqsClient` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `SimpleSqsClient` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend. This variant allows for creating
+    * the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `SimpleSqsClient` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `SimpleSqsClient` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, SimpleSqsClient[G]] =
     PureSqsClient.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleSqsClient` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleSqsClient` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, SimpleSqsClient[F]] =
     PureSqsClient.async[F](awsRegion).map(apply[F])
 
-  /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs a `SimpleSqsClient` using an underlying asynchronous client backend. This variant allows for creating
+    * the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `SimpleSqsClient` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `SimpleSqsClient` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, SimpleSqsClient[G]] =
     PureSqsClient.asyncIn[F, G](awsRegion).map(apply[G])

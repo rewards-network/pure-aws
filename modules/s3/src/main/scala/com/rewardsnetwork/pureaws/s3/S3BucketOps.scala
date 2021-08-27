@@ -13,11 +13,16 @@ trait S3BucketOps[F[_]] {
 
   /** Create an S3 bucket with the given parameters.
     *
-    * @param name The name of the bucket.
-    * @param location The AWS region (as a `BucketLocationConstraint`) that the bucket should be created in.
-    * @param acl The Access Control List for this bucket.
-    * @param permissions Pairs of grantees and their S3BucketPermissions. Optional.
-    * @return `Unit` if successful, will throw if failed.
+    * @param name
+    *   The name of the bucket.
+    * @param location
+    *   The AWS region (as a `BucketLocationConstraint`) that the bucket should be created in.
+    * @param acl
+    *   The Access Control List for this bucket.
+    * @param permissions
+    *   Pairs of grantees and their S3BucketPermissions. Optional.
+    * @return
+    *   `Unit` if successful, will throw if failed.
     */
   def createBucket(
       name: String,
@@ -28,15 +33,19 @@ trait S3BucketOps[F[_]] {
 
   /** Delete an S3 bucket with the given parameters.
     *
-    * @param name The name of the bucket.
-    * @param expectedBucketOwner The expected owner of the bucket, if needed.
-    * @return `Unit` if successful, will throw if failed.
+    * @param name
+    *   The name of the bucket.
+    * @param expectedBucketOwner
+    *   The expected owner of the bucket, if needed.
+    * @return
+    *   `Unit` if successful, will throw if failed.
     */
   def deleteBucket(name: String, expectedBucketOwner: Option[String] = none): F[Unit]
 
   /** Returns a list of available S3 buckets.
     *
-    * @return A list of buckets indicating what buckets you have access to and when they were created.
+    * @return
+    *   A list of buckets indicating what buckets you have access to and when they were created.
     */
   def listBuckets: F[List[S3BucketInfo]]
 }
@@ -83,34 +92,42 @@ object S3BucketOps {
 
   /** Constructs an `S3BucketOps` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3BucketOps` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3BucketOps` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, S3BucketOps[F]] =
     PureS3Client.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3BucketOps` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3BucketOps` using an underlying synchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3BucketOps` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3BucketOps` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, S3BucketOps[G]] =
     PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs an `S3BucketOps` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3BucketOps` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3BucketOps` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, S3BucketOps[F]] =
     PureS3Client.async[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3BucketOps` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3BucketOps` using an underlying asynchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3BucketOps` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3BucketOps` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, S3BucketOps[G]] =
     PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])

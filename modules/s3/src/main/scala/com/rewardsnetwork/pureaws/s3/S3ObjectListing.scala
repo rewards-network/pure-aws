@@ -2,9 +2,9 @@ package com.rewardsnetwork.pureaws.s3
 
 import cats.kernel.Monoid
 
-/** A listing of S3 objects and all common prefixes between them.
-  * A "common prefix" in this case is any delimited part of an S3 object key that has no data, and acts like a directory.
-  * For example if you have a key `foo/bar/baz` then `foo/bar` would be a common prefix, as there is no data at that key.
+/** A listing of S3 objects and all common prefixes between them. A "common prefix" in this case is any delimited part
+  * of an S3 object key that has no data, and acts like a directory. For example if you have a key `foo/bar/baz` then
+  * `foo/bar` would be a common prefix, as there is no data at that key.
   *
   * There is also a `Monoid` instance for this type, or you can combine listings using the `++` operator.
   */

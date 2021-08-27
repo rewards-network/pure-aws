@@ -11,8 +11,7 @@ import eu.timepit.refined.api.Refined
 /** A version of `SimpleSqsClient` that has refined versions of method parameters. */
 trait RefinedSqsClient[F[_]] {
 
-  /** Get a stream of messages from a queue URL.
-    * Each message is emitted as an individual `String`.
+  /** Get a stream of messages from a queue URL. Each message is emitted as an individual `String`.
     *
     * Types are checked using `refined`.
     */
@@ -37,12 +36,14 @@ trait RefinedSqsClient[F[_]] {
   def deleteMessage(receiptHandle: RefinedReceiptHandle[F]): F[Unit]
 
   /** Send a message to an SQS queue. Message delay is determined by the queue settings.
-    * @return The message ID string of the sent message.
+    * @return
+    *   The message ID string of the sent message.
     */
   def sendMessage(queueUrl: String, messageBody: String): F[String]
 
   /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message.
-    * @return The message ID string of the sent message.
+    * @return
+    *   The message ID string of the sent message.
     */
   def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String]
 
@@ -109,16 +110,20 @@ object RefinedSqsClient {
 
   /** Constructs a `RefinedSqsClient` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `RefinedSqsClient` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `RefinedSqsClient` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](region: Region) =
     PureSqsClient.sync[F](region).map(apply[F])
 
   /** Constructs a `RefinedSqsClient` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `RefinedSqsClient` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `RefinedSqsClient` instance using an asynchronous backend.
     */
   def async[F[_]: Async](region: Region) =
     PureSqsClient.async[F](region).map(apply[F])

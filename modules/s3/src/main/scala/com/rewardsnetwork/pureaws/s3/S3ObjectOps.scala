@@ -14,42 +14,64 @@ trait S3ObjectOps[F[_]] {
 
   /** Copies an object from a source bucket and key to a new bucket and key.
     *
-    * @param oldBucket Bucket of the object to be copied.
-    * @param oldKey Key of the object to be copied.
-    * @param newBucket Bucket to copy the object to.
-    * @param newKey Key to copy the object to.
-    * @return `Unit` if successful, will throw if failed.
+    * @param oldBucket
+    *   Bucket of the object to be copied.
+    * @param oldKey
+    *   Key of the object to be copied.
+    * @param newBucket
+    *   Bucket to copy the object to.
+    * @param newKey
+    *   Key to copy the object to.
+    * @return
+    *   `Unit` if successful, will throw if failed.
     */
   def copyObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
 
   /** Deletes the object at the specified bucket and key
     *
-    * @param bucket Bucket of the object to be deleted.
-    * @param key Key of the object to be deleted.
-    * @return `Unit` if successful, will throw if failed.
+    * @param bucket
+    *   Bucket of the object to be deleted.
+    * @param key
+    *   Key of the object to be deleted.
+    * @return
+    *   `Unit` if successful, will throw if failed.
     */
   def deleteObject(bucket: String, key: String): F[Unit]
 
-  /** A `copyObject`, followed by a `deleteObject` of the original object.
-    * Be warned that this operation is, by design, not atomic and if the copy or delete step fails you might need to clean up your S3 bucket.
+  /** A `copyObject`, followed by a `deleteObject` of the original object. Be warned that this operation is, by design,
+    * not atomic and if the copy or delete step fails you might need to clean up your S3 bucket.
     *
-    * @param oldBucket Bucket of the object to be moved.
-    * @param oldKey Key of the object to be moved.
-    * @param newBucket Bucket to move the object to.
-    * @param newKey Key to move the object to.
-    * @return `Unit` if successful, will throw if failed.
+    * @param oldBucket
+    *   Bucket of the object to be moved.
+    * @param oldKey
+    *   Key of the object to be moved.
+    * @param newBucket
+    *   Bucket to move the object to.
+    * @param newKey
+    *   Key to move the object to.
+    * @return
+    *   `Unit` if successful, will throw if failed.
     */
   def moveObject(oldBucket: String, oldKey: String, newBucket: String, newKey: String): F[Unit]
 
-  /** Lists objects in a given bucket, with some optional config parameters.
-    * For a paginated listing, see `listObjectsPaginated`.
+  /** Lists objects in a given bucket, with some optional config parameters. For a paginated listing, see
+    * `listObjectsPaginated`.
     *
-    * @param bucket The bucket you would like to list objects in.
-    * @param delimiter (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example delimiter would be "/".
-    * @param prefix (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it can affect your common prefix results.
-    * @param expectedBucketOwner (Optional) the owner of this bucket, if it is not you.
-    * @param requestPayer (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
-    * @return An `S3ObjectListing` containing a complete list of all objects in the listed bucket, and all common prefixes between them.
+    * @param bucket
+    *   The bucket you would like to list objects in.
+    * @param delimiter
+    *   (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example
+    *   delimiter would be "/".
+    * @param prefix
+    *   (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it
+    *   can affect your common prefix results.
+    * @param expectedBucketOwner
+    *   (Optional) the owner of this bucket, if it is not you.
+    * @param requestPayer
+    *   (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
+    * @return
+    *   An `S3ObjectListing` containing a complete list of all objects in the listed bucket, and all common prefixes
+    *   between them.
     */
   def listObjects(
       bucket: String,
@@ -59,16 +81,25 @@ trait S3ObjectOps[F[_]] {
       requestPayer: Option[RequestPayer]
   )(implicit sync: Sync[F]): F[S3ObjectListing]
 
-  /** Lists objects in a given bucket, paginated as a stream of results-per-request.
-    * For a complete listing, see `listObjects`.
+  /** Lists objects in a given bucket, paginated as a stream of results-per-request. For a complete listing, see
+    * `listObjects`.
     *
-    * @param bucket The bucket you would like to list objects in.
-    * @param maxKeysPerRequest The max number of results you would like to return per-request. Default is 1000 results.
-    * @param delimiter (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example delimiter would be "/".
-    * @param prefix (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it can affect your common prefix results.
-    * @param expectedBucketOwner (Optional) the owner of this bucket, if it is not you.
-    * @param requestPayer (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
-    * @return A stream of `S3ObjectListing` objects containing a list of all of the objects and prefixes per-request.
+    * @param bucket
+    *   The bucket you would like to list objects in.
+    * @param maxKeysPerRequest
+    *   The max number of results you would like to return per-request. Default is 1000 results.
+    * @param delimiter
+    *   (Optional) a "path delimiter" if you are treating your S3 object keys as being in "folders". A common example
+    *   delimiter would be "/".
+    * @param prefix
+    *   (Optional) a prefix that you want to filter your search by, i.e. a "folder". When used along with `delimiter` it
+    *   can affect your common prefix results.
+    * @param expectedBucketOwner
+    *   (Optional) the owner of this bucket, if it is not you.
+    * @param requestPayer
+    *   (Optional) An acknowledgement that you are paying for accessing this bucket, if applicable.
+    * @return
+    *   A stream of `S3ObjectListing` objects containing a list of all of the objects and prefixes per-request.
     */
   def listObjectsPaginated(
       bucket: String,
@@ -156,34 +187,42 @@ object S3ObjectOps {
 
   /** Constructs an `S3ObjectOps` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3ObjectOps` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3ObjectOps` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, S3ObjectOps[F]] =
     PureS3Client.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3ObjectOps` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3ObjectOps` using an underlying synchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3ObjectOps` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3ObjectOps` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, S3ObjectOps[G]] =
     PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs an `S3ObjectOps` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3ObjectOps` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3ObjectOps` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, S3ObjectOps[F]] =
     PureS3Client.async[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3ObjectOps` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3ObjectOps` using an underlying asynchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3ObjectOps` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3ObjectOps` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, S3ObjectOps[G]] =
     PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])

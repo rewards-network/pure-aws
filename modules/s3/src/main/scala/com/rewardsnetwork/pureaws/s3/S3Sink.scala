@@ -13,58 +13,75 @@ import software.amazon.awssdk.services.s3.model._
 /** A helper for uploading S3 objects using FS2. */
 trait S3Sink[F[_]] {
 
-  /** Write the stream of bytes to an object at the specified path.
-    * Content type is assumed to be "text/plain".
+  /** Write the stream of bytes to an object at the specified path. Content type is assumed to be "text/plain".
     *
-    * The bytes are uploaded all at once, and buffered in-memory.
-    * For large objects on the order of several MiB, consider doing a multipart upload.
+    * The bytes are uploaded all at once, and buffered in-memory. For large objects on the order of several MiB,
+    * consider doing a multipart upload.
     *
-    * @param bucket The bucket of the object you are uploading to.
-    * @param key The key of the object you are uploading to.
-    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
+    * @param bucket
+    *   The bucket of the object you are uploading to.
+    * @param key
+    *   The key of the object you are uploading to.
+    * @return
+    *   An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
   def writeText(bucket: String, key: String): Pipe[F, Byte, String]
 
-  /** Write the stream of bytes to an object at the specified path in multiple parts.
-    * Content type is assumed to be "text/plain"
+  /** Write the stream of bytes to an object at the specified path in multiple parts. Content type is assumed to be
+    * "text/plain"
     *
-    * Unlike `writeText`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
-    * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
-    * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+    * Unlike `writeText`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload
+    * feature. You may specify a "part size" which is the number of bytes you will upload at once in a streaming
+    * fashion. By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
     *
-    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised will bubble up to you.
+    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised
+    * will bubble up to you.
     *
-    * @param bucket The bucket of the object you are uploading to.
-    * @param key The key of the object you are uploading to.
-    * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
-    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
+    * @param bucket
+    *   The bucket of the object you are uploading to.
+    * @param key
+    *   The key of the object you are uploading to.
+    * @param partSizeBytes
+    *   The number of bytes (default 5120 or 5MiB) to upload per-part.
+    * @return
+    *   An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
   def writeTextMultipart(bucket: String, key: String, partSizeBytes: Int = 5120): Pipe[F, Byte, String]
 
   /** Write the stream of bytes to an object at the specified path.
     *
-    * The bytes are uploaded all at once, and buffered in-memory.
-    * For large objects on the order of several MiB, consider doing a multipart upload.
+    * The bytes are uploaded all at once, and buffered in-memory. For large objects on the order of several MiB,
+    * consider doing a multipart upload.
     *
-    * @param bucket The bucket of the object you are uploading to.
-    * @param key The key of the object you are uploading to.
-    * @param contentType The desired content type of the object being uploaded.
-    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
+    * @param bucket
+    *   The bucket of the object you are uploading to.
+    * @param key
+    *   The key of the object you are uploading to.
+    * @param contentType
+    *   The desired content type of the object being uploaded.
+    * @return
+    *   An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
   def writeBytes(bucket: String, key: String, contentType: String): Pipe[F, Byte, String]
 
-  /** Write the stream of bytes to an object at the specified path in multiple parts.
-    * Unlike `writeBytes`, which uploads everything at once, this uses the somewhat more complex S3 multipart upload feature.
-    * You may specify a "part size" which is the number of bytes you will upload at once in a streaming fashion.
-    * By default this is 5MiB or 5120 bytes, the minimum supported number in the SDK.
+  /** Write the stream of bytes to an object at the specified path in multiple parts. Unlike `writeBytes`, which uploads
+    * everything at once, this uses the somewhat more complex S3 multipart upload feature. You may specify a "part size"
+    * which is the number of bytes you will upload at once in a streaming fashion. By default this is 5MiB or 5120
+    * bytes, the minimum supported number in the SDK.
     *
-    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised will bubble up to you.
+    * If some error occurs during upload, the multipart request will automatically be aborted and the exception raised
+    * will bubble up to you.
     *
-    * @param bucket The bucket of the object you are uploading to.
-    * @param key The key of the object you are uploading to.
-    * @param contentType The desired content type of the object being uploaded.
-    * @param partSizeBytes The number of bytes (default 5120 or 5MiB) to upload per-part.
-    * @return An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
+    * @param bucket
+    *   The bucket of the object you are uploading to.
+    * @param key
+    *   The key of the object you are uploading to.
+    * @param contentType
+    *   The desired content type of the object being uploaded.
+    * @param partSizeBytes
+    *   The number of bytes (default 5120 or 5MiB) to upload per-part.
+    * @return
+    *   An FS2 `Pipe` that writes all incoming bytes and emits a single string (ETag) of your object.
     */
   def writeBytesMultipart(
       bucket: String,
@@ -156,34 +173,42 @@ object S3Sink {
 
   /** Constructs an `S3Sink` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Sink` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Sink` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, S3Sink[F]] =
     PureS3Client.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3Sink` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3Sink` using an underlying synchronous client backend. This variant allows for creating the client
+    * with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Sink` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Sink` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, S3Sink[G]] =
     PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs an `S3Sink` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Sink` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Sink` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, S3Sink[F]] =
     PureS3Client.async[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3Sink` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3Sink` using an underlying asynchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Sink` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Sink` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, S3Sink[G]] =
     PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])

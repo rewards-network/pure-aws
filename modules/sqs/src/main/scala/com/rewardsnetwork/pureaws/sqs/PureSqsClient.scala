@@ -8,9 +8,8 @@ import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.sqs.{SqsClient, SqsAsyncClient}
 import software.amazon.awssdk.services.sqs.model._
 
-/** A pure client for dealing with Amazon SQS.
-  * Uses bare AWS request/response types.
-  * Consider using `SimpleSqsClient` instead which is based on this.
+/** A pure client for dealing with Amazon SQS. Uses bare AWS request/response types. Consider using `SimpleSqsClient`
+  * instead which is based on this.
   */
 trait PureSqsClient[F[_]] {
 
@@ -44,8 +43,8 @@ trait PureSqsClient[F[_]] {
 
 object PureSqsClient {
 
-  /** Creates a new PureSqsClient given an existing `SqsClient`.
-    * Note that you will have to close the client yourself when you are finished.
+  /** Creates a new PureSqsClient given an existing `SqsClient`. Note that you will have to close the client yourself
+    * when you are finished.
     */
   def apply[F[_]: Sync](client: SqsClient) = new PureSqsClient[F] {
     private def block[A](f: => A): F[A] = Sync[F].blocking(f)
@@ -93,8 +92,8 @@ object PureSqsClient {
 
   }
 
-  /** Creates a new PureSqsClient using an existing SqsAsyncClient.
-    * Note that you will have to close the client yourself when you are finished.
+  /** Creates a new PureSqsClient using an existing SqsAsyncClient. Note that you will have to close the client yourself
+    * when you are finished.
     */
   def apply[F[_]: Async](client: SqsAsyncClient) = new PureSqsClient[F] {
     private def lift[A](f: => CompletableFuture[A]): F[A] = Async[F].fromCompletableFuture(Sync[F].delay(f))
@@ -137,34 +136,42 @@ object PureSqsClient {
 
   /** Creates a `PureSqsClient` using a synchronous backend with default settings.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `Resource` containing a `PureSqsClient` using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `Resource` containing a `PureSqsClient` using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, PureSqsClient[F]] =
     SqsClientBackend.sync[F](awsRegion)().map(apply[F](_))
 
-  /** Creates a `PureSqsClient` using a synchronous backend with default settings.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Creates a `PureSqsClient` using a synchronous backend with default settings. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `Resource` containing a `PureSqsClient` using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `Resource` containing a `PureSqsClient` using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, PureSqsClient[G]] =
     SqsClientBackend.sync[F](awsRegion)().map(apply[G](_))
 
   /** Creates a `PureSqsClient` using an asynchronous backend with default settings.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `Resource` containing a `PureSqsClient` using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, PureSqsClient[F]] =
     SqsClientBackend.async[F](awsRegion)().map(apply[F])
 
-  /** Creates a `PureSqsClient` using an asynchronous backend with default settings.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Creates a `PureSqsClient` using an asynchronous backend with default settings. This variant allows for creating
+    * the client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return A `Resource` containing a `PureSqsClient` using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   A `Resource` containing a `PureSqsClient` using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, PureSqsClient[G]] =
     SqsClientBackend.async[F](awsRegion)().map(apply[G])
