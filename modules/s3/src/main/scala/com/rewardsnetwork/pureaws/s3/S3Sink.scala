@@ -137,30 +137,32 @@ object S3Sink {
 
         Stream.eval(client.createMultipartUpload(createMultipartReq)).flatMap { res =>
           val uploadId = res.uploadId
-          def completeUploadReq(parts: List[CompletedPart]) =
+          def completeUploadReq(parts: Chunk[CompletedPart]) =
             CompleteMultipartUploadRequest.builder
               .bucket(bucket)
               .key(key)
               .uploadId(uploadId)
-              .multipartUpload(CompletedMultipartUpload.builder.parts(parts: _*).build)
+              .multipartUpload(CompletedMultipartUpload.builder.parts(parts.toList: _*).build)
               .build
 
-          s.chunkN(partSizeBytes).map(_.toByteBuffer).zip(partNumStream).flatMap { case (bytes, partNum) =>
-            Stream
-              .eval(client.uploadPart(uploadPartReq(bytes, partNum, uploadId), bytes))
-              .map(partRes => completedPart(partRes.eTag, partNum))
-              .fold(List.empty[CompletedPart])(_ :+ _)
-              .map(completeUploadReq)
-              .evalMap(client.completeMultipartUpload)
-              .map(_.eTag)
-              .handleErrorWith { e =>
-                val abortReq = AbortMultipartUploadRequest.builder.bucket(bucket).key(key).uploadId(uploadId).build
-                Stream
-                  .eval(
-                    client.abortMultipartUpload(abortReq) *> ApplicativeError[F, Throwable].raiseError(e)
-                  )
-              }
-          }
+          s.chunkN(partSizeBytes)
+            .map(_.toByteBuffer)
+            .zip(partNumStream)
+            .flatMap { case (bytes, partNum) =>
+              Stream
+                .eval(client.uploadPart(uploadPartReq(bytes, partNum, uploadId), bytes))
+                .map(partRes => completedPart(partRes.eTag, partNum))
+            }
+            .chunkAll
+            .map(completeUploadReq)
+            .evalMap(client.completeMultipartUpload)
+            .map(_.eTag)
+            .handleErrorWith { e =>
+              val abortReq = AbortMultipartUploadRequest.builder.bucket(bucket).key(key).uploadId(uploadId).build
+              Stream.eval(
+                client.abortMultipartUpload(abortReq) *> ApplicativeError[F, Throwable].raiseError(e)
+              )
+            }
         }
       }
 
