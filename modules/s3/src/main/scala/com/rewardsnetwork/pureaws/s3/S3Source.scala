@@ -12,8 +12,8 @@ import scala.jdk.CollectionConverters._
 /** A helper for downloading object bytes from an S3 object using FS2. */
 trait S3Source[F[_]] {
 
-  /** Read a stream of bytes from the object at the specified bucket/key in S3.
-    * For reading a whole object into memory at once and not using streaming, it might be more efficient to use `readWholeObject` instead.
+  /** Read a stream of bytes from the object at the specified bucket/key in S3. For reading a whole object into memory
+    * at once and not using streaming, it might be more efficient to use `readWholeObject` instead.
     */
   def readObject(bucket: String, key: String): Stream[F, Byte]
 
@@ -72,34 +72,42 @@ object S3Source {
 
   /** Constructs an `S3Source` using an underlying synchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Source` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Source` instance using a synchronous backend.
     */
   def sync[F[_]: Sync](awsRegion: Region): Resource[F, S3Source[F]] =
     PureS3Client.sync[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3Source` using an underlying synchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3Source` using an underlying synchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Source` instance using a synchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Source` instance using a synchronous backend.
     */
   def syncIn[F[_]: Sync, G[_]: Sync](awsRegion: Region): Resource[F, S3Source[G]] =
     PureS3Client.syncIn[F, G](awsRegion).map(apply[G])
 
   /** Constructs an `S3Source` using an underlying asynchronous client backend.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Source` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Source` instance using an asynchronous backend.
     */
   def async[F[_]: Async](awsRegion: Region): Resource[F, S3Source[F]] =
     PureS3Client.async[F](awsRegion).map(apply[F])
 
-  /** Constructs an `S3Source` using an underlying asynchronous client backend.
-    * This variant allows for creating the client with a different effect type than the `Resource` it is provided in.
+  /** Constructs an `S3Source` using an underlying asynchronous client backend. This variant allows for creating the
+    * client with a different effect type than the `Resource` it is provided in.
     *
-    * @param awsRegion The AWS region you are operating in.
-    * @return An `S3Source` instance using an asynchronous backend.
+    * @param awsRegion
+    *   The AWS region you are operating in.
+    * @return
+    *   An `S3Source` instance using an asynchronous backend.
     */
   def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, S3Source[G]] =
     PureS3Client.asyncIn[F, G](awsRegion).map(apply[G])

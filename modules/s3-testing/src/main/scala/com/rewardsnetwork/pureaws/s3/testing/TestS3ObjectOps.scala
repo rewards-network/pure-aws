@@ -11,8 +11,10 @@ import cats.effect.Sync
 
 /** A test utility for integrating with the `S3ObjectOps` algebra.
   *
-  * @param backend Your `S3TestingBackend`.
-  * @param failWith An optional `Throwable` that you would like all requests to fail with, to test error recovery.
+  * @param backend
+  *   Your `S3TestingBackend`.
+  * @param failWith
+  *   An optional `Throwable` that you would like all requests to fail with, to test error recovery.
   */
 class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throwable] = none)(implicit
     F: MonadError[F, Throwable]
@@ -93,9 +95,8 @@ class TestS3ObjectOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throw
     }
   }
 
-  /** `expectedBucketOwner` and `requestPayer` are ignored.
-    * All object parameters besides bucket and key are faked and should not be relied upon.
-    * The list of common
+  /** `expectedBucketOwner` and `requestPayer` are ignored. All object parameters besides bucket and key are faked and
+    * should not be relied upon. The list of common
     */
   def listObjects(
       bucket: String,

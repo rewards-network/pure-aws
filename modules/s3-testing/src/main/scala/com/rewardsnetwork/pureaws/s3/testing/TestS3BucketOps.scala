@@ -8,8 +8,10 @@ import com.rewardsnetwork.pureaws.s3.S3BucketInfo
 
 /** A test utility for integrating with the `S3BucketOps` algebra.
   *
-  * @param backend Your `S3TestingBackend`.
-  * @param failWith An optional `Throwable` that you would like all requests to fail with, to test error recovery.
+  * @param backend
+  *   Your `S3TestingBackend`.
+  * @param failWith
+  *   An optional `Throwable` that you would like all requests to fail with, to test error recovery.
   */
 class TestS3BucketOps[F[_]](backend: S3TestingBackend[F], failWith: Option[Throwable] = none)(implicit
     F: MonadError[F, Throwable]
