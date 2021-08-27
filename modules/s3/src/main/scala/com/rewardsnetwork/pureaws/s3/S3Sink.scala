@@ -6,7 +6,7 @@ import cats.ApplicativeError
 import cats.effect.kernel._
 import cats.syntax.all._
 import com.rewardsnetwork.pureaws.utils.md5String
-import fs2.{Pipe, Stream}
+import fs2.{Chunk, Pipe, Stream}
 import software.amazon.awssdk.regions.Region
 import software.amazon.awssdk.services.s3.model._
 
@@ -118,7 +118,7 @@ object S3Sink {
           key: String,
           contentType: String,
           partSizeBytes: Int = 5120
-      ): Pipe[F, Byte, String] = { s =>
+      ): Pipe[F, Byte, String] = { byteStream =>
         val partNumStream = Stream.iterate(1)(_ + 1)
         val createMultipartReq =
           CreateMultipartUploadRequest.builder.bucket(bucket).key(key).contentType(contentType).build
@@ -133,7 +133,8 @@ object S3Sink {
             .contentMD5(md5String(bytes.array))
             .build()
 
-        def completedPart(etag: String, partNumber: Int) = CompletedPart.builder.eTag(etag).partNumber(partNumber).build
+        def completedPart(etag: String, partNumber: Int): CompletedPart =
+          CompletedPart.builder.eTag(etag).partNumber(partNumber).build
 
         Stream.eval(client.createMultipartUpload(createMultipartReq)).flatMap { res =>
           val uploadId = res.uploadId
@@ -145,7 +146,8 @@ object S3Sink {
               .multipartUpload(CompletedMultipartUpload.builder.parts(parts.toList: _*).build)
               .build
 
-          s.chunkN(partSizeBytes)
+          byteStream
+            .chunkN(partSizeBytes)
             .map(_.toByteBuffer)
             .zip(partNumStream)
             .flatMap { case (bytes, partNum) =>
