@@ -37,14 +37,14 @@ val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheck
 //Scala versions supported
 val scala213 = "2.13.6"
 val scala212 = "2.12.13"
-val scala3 = "3.0.1"
+val scala3 = "3.0.2"
 
 // Project setup
 inThisBuild(
   List(
     organization := "com.rewardsnetwork",
     developers := List(
-      Developer("sloshy", "Ryan Peters", "rpeters@rewardsnetwork.com", url("https://github.com/sloshy"))
+      Developer("sloshy", "Ryan Peters", "me@rpeters.dev", url("https://github.com/sloshy"))
     ),
     homepage := Some(url("https://github.com/rewards-network/pure-aws")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
