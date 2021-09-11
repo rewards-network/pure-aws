@@ -5,15 +5,16 @@
 A Scala integrations library for AWS using principles of pure functional programming.
 Depends heavily on Cats, Cats Effect, and FS2.
 
-Currently includes the following modules, with more to come:
+Currently includes the following modules (pluggable as `<module-name>` below), with more to come:
 * `pure-aws-s3`: S3 object sources and sinks
 * `pure-aws-s3-testing`: Test helpers to ensure you're using the S3 clients correctly
 * `pure-aws-sqs`: Basic and simplified SQS access
 * `pure-aws-sqs-refined`: Builds on top of `pure-aws-sqs` with `refined` integration for type-safe method parameters.
 
 ## Setup
-This library is published for Scala 2.13 and 2.12.
-Scala 3 support is pending a compiler bugfix where it does not play nice with the AWS SDK when generating scaladoc.
+This library is published for Scala 3, Scala 2.13, and 2.12.
+Scala 3 does not have published scaladoc, due to a temporary compiler bug.
+A future release will make note of when this is fixed, but feel free to refer to the 2.13 API docs linked below in the meantime.
 ```
 libraryDependencies += "com.rewardsnetwork" %% "<module-name>" % "<latest tag>"
 ```
