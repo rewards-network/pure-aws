@@ -21,7 +21,7 @@ val collectionCompat =
 
 //Test/build deps
 val munitV = "0.7.29"
-val munitCatsEffectV = "1.0.5"
+val munitCatsEffectV = "1.0.6"
 val scalaCheckV = "1.15.4"
 val scalaCheckEffectV = "1.0.2"
 
