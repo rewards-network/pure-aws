@@ -76,7 +76,7 @@ object SimpleSqsClient {
       .receiveMessageStream(reqWithMaybeAttrs)
       .flatMap[F, Message](res =>
         Stream.fromIterator[F](res.messages.iterator.asScala, 1024)
-      ) //TODO: make the chunk size configurable
+      ) // TODO: make the chunk size configurable
   }
 
   def apply[F[_]: Sync](client: PureSqsClient[F]) =
