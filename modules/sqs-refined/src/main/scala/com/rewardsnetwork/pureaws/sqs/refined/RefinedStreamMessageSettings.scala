@@ -13,7 +13,7 @@ final case class RefinedStreamMessageSettings(
 
 object RefinedStreamMessageSettings {
   val default = {
-    //This is gross but necessary to get literals working in Scala 3 for the moment
+    // This is gross but necessary to get literals working in Scala 3 for the moment
     val _ = refineV[Positive](5)
     val mm = RefType.applyRef[MaxMessages](10).getOrElse(???)
     val vts = RefType.applyRef[VisibilityTimeout](30).getOrElse(???)
