@@ -1,6 +1,6 @@
 //Core deps
-val amazonV = "2.17.38"
-val catsV = "2.7.0"
+val amazonV = "2.17.104"
+val catsV = "2.6.1"
 val catsEffectV = "3.2.8"
 val fs2V = "3.1.2"
 val log4catsV = "1.2.0"
@@ -83,7 +83,7 @@ lazy val core = (project in file("modules/core"))
       collectionCompat,
       fs2Core,
       fs2ReactiveStreams,
-      //Test deps
+      // Test deps
       munitCatsEffect,
       munitScalacheck,
       scalaCheck,
@@ -95,9 +95,9 @@ lazy val sqs = (project in file("modules/sqs"))
   .settings(
     name := "pure-aws-sqs",
     libraryDependencies ++= Seq(
-      //Core deps
+      // Core deps
       awsSQS,
-      //Test deps
+      // Test deps
       catsEffectLaws
     )
   )
@@ -123,10 +123,10 @@ lazy val s3 = (project in file("modules/s3"))
   .settings(
     name := "pure-aws-s3",
     libraryDependencies ++= Seq(
-      //Core deps
+      // Core deps
       awsS3,
       fs2Io,
-      //Test deps
+      // Test deps
       catsEffectLaws
     ),
     Compile / doc / sources := {
