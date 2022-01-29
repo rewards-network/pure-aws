@@ -7,6 +7,7 @@ import software.amazon.awssdk.regions.Region
 
 import scala.jdk.CollectionConverters._
 import eu.timepit.refined.api.Refined
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 
 /** A version of `SimpleSqsClient` that has refined versions of method parameters. */
 trait RefinedSqsClient[F[_]] {
@@ -25,6 +26,12 @@ trait RefinedSqsClient[F[_]] {
       queueUrl: String,
       settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
   ): Stream[F, RefinedMessageWithAttributes[F]]
+
+  /** Like `streamMessages`, but also pairs each message with all its attributes. */
+  def streamMessagesWithCustomAttributes(
+      queueUrl: String,
+      settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
+  ): Stream[F, RefinedMessageWithCustomAttributes[F]]
 
   /** Change a message's visibility timeout to the specified value. */
   def changeMessageVisibility(
@@ -47,6 +54,15 @@ trait RefinedSqsClient[F[_]] {
     */
   def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String]
 
+  /** Send a message with attributes to an SQS queue. Message delay is determined by the queue settings
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      messageAttributes: Map[String, MessageAttributeValue]
+  ): F[String]
 }
 
 object RefinedSqsClient {
@@ -86,6 +102,25 @@ object RefinedSqsClient {
             )
           }
 
+      def streamMessagesWithCustomAttributes(
+          queueUrl: String,
+          settings: RefinedStreamMessageSettings
+      ): Stream[F, RefinedMessageWithCustomAttributes[F]] =
+        SimpleSqsClient
+          .streamMessagesInternal(pureClient)(
+            queueUrl,
+            settings.maxMessages.value,
+            settings.visibilityTimeoutSeconds.value,
+            settings.waitTimeSeconds.value
+          )
+          .map { m =>
+            RefinedMessageWithCustomAttributes(
+              m.body,
+              RefinedReceiptHandle(m.receiptHandle, queueUrl, this),
+              m.messageAttributes().asScala.toMap
+            )
+          }
+
       def changeMessageVisibility(
           visibilityTimeoutSeconds: VisibilityTimeout,
           receiptHandle: RefinedReceiptHandle[F]
@@ -106,6 +141,11 @@ object RefinedSqsClient {
       def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
 
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          messageAttributes: Map[String, MessageAttributeValue]
+      ): F[String] = simpleClient.sendMessage(queueUrl, messageBody, messageAttributes)
     }
 
   /** Constructs a `RefinedSqsClient` using an underlying synchronous client backend.
