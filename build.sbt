@@ -1,5 +1,5 @@
 //Core deps
-val amazonV = "2.17.104"
+val amazonV = "2.17.121"
 val catsV = "2.7.0"
 val catsEffectV = "3.2.8"
 val fs2V = "3.1.2"
@@ -21,7 +21,7 @@ val collectionCompat =
 
 //Test/build deps
 val munitV = "0.7.29"
-val munitCatsEffectV = "1.0.5"
+val munitCatsEffectV = "1.0.7"
 val scalaCheckV = "1.15.4"
 val scalaCheckEffectV = "1.0.2"
 
