@@ -26,14 +26,14 @@ class Fs2AsyncResponseTransformerSpec extends CatsEffectSuite with ScalaCheckEff
         val prep = IO {
           val cf = transformer.prepare
 
-          //Use the transformer the way the SDK would
+          // Use the transformer the way the SDK would
           transformer.onResponse(exampleStr)
           transformer.onStream(sdkPublisher)
 
           cf
         }
 
-        //Get and test results
+        // Get and test results
         IO.fromCompletableFuture(prep).flatMap { case (str, byteStream) =>
           assertEquals(str, exampleStr)
           byteStream.compile
