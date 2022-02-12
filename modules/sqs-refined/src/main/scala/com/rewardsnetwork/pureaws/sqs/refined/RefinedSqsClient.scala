@@ -27,12 +27,6 @@ trait RefinedSqsClient[F[_]] {
       settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
   ): Stream[F, RefinedMessageWithAttributes[F]]
 
-  /** Like `streamMessages`, but also pairs each message with all its attributes. */
-  def streamMessagesWithCustomAttributes(
-      queueUrl: String,
-      settings: RefinedStreamMessageSettings = RefinedStreamMessageSettings.default
-  ): Stream[F, RefinedMessageWithCustomAttributes[F]]
-
   /** Change a message's visibility timeout to the specified value. */
   def changeMessageVisibility(
       visibilityTimeoutSeconds: VisibilityTimeout,
@@ -42,19 +36,7 @@ trait RefinedSqsClient[F[_]] {
   /** Delete a message given you have its receipt handle. */
   def deleteMessage(receiptHandle: RefinedReceiptHandle[F]): F[Unit]
 
-  /** Send a message to an SQS queue. Message delay is determined by the queue settings.
-    * @return
-    *   The message ID string of the sent message.
-    */
-  def sendMessage(queueUrl: String, messageBody: String): F[String]
-
-  /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message.
-    * @return
-    *   The message ID string of the sent message.
-    */
-  def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String]
-
-  /** Send a message with attributes to an SQS queue. Message delay is determined by the queue settings
+  /** Send a message with attributes to an SQS queue. Message delay is determined by the queue settings.
     * @return
     *   The message ID string of the sent message.
     */
@@ -63,10 +45,21 @@ trait RefinedSqsClient[F[_]] {
       messageBody: String,
       messageAttributes: Map[String, MessageAttributeValue]
   ): F[String]
+
+  /** Sends a message with attributes to an SQS queue. Allows specifying the seconds to delay the message.
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      delaySeconds: Int Refined DelaySeconds,
+      messageAttributes: Map[String, MessageAttributeValue]
+  ): F[String]
 }
 
 object RefinedSqsClient {
-  def apply[F[_]: Sync](pureClient: PureSqsClient[F]) =
+  def apply[F[_]: Sync](pureClient: PureSqsClient[F]): RefinedSqsClient[F] =
     new RefinedSqsClient[F] {
       private val simpleClient = SimpleSqsClient(pureClient)
       def streamMessages(
@@ -94,30 +87,14 @@ object RefinedSqsClient {
             settings.waitTimeSeconds.value
           )
           .map { m =>
-            val attributes = MessageAttributes.fromMap(m.attributes().asScala.toMap)
+            val attributes = MessageAttributes.fromMap(
+              m.attributes().asScala.toMap,
+              m.messageAttributes().asScala.toMap
+            )
             RefinedMessageWithAttributes(
               m.body,
               RefinedReceiptHandle(m.receiptHandle, queueUrl, this),
               attributes
-            )
-          }
-
-      def streamMessagesWithCustomAttributes(
-          queueUrl: String,
-          settings: RefinedStreamMessageSettings
-      ): Stream[F, RefinedMessageWithCustomAttributes[F]] =
-        SimpleSqsClient
-          .streamMessagesInternal(pureClient)(
-            queueUrl,
-            settings.maxMessages.value,
-            settings.visibilityTimeoutSeconds.value,
-            settings.waitTimeSeconds.value
-          )
-          .map { m =>
-            RefinedMessageWithCustomAttributes(
-              m.body,
-              RefinedReceiptHandle(m.receiptHandle, queueUrl, this),
-              m.messageAttributes().asScala.toMap
             )
           }
 
@@ -135,36 +112,30 @@ object RefinedSqsClient {
       def deleteMessage(receiptHandle: RefinedReceiptHandle[F]): F[Unit] =
         simpleClient.deleteMessage(receiptHandle.rawReceiptHandle, receiptHandle.queueUrl)
 
-      def sendMessage(queueUrl: String, messageBody: String): F[String] =
-        simpleClient.sendMessage(queueUrl, messageBody)
+      def sendMessage(queueUrl: String, messageBody: String, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
+        simpleClient.sendMessage(queueUrl, messageBody, messageAttributes)
 
-      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String] =
-        simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
-
-      def sendMessage(
-          queueUrl: String,
-          messageBody: String,
-          messageAttributes: Map[String, MessageAttributeValue]
-      ): F[String] = simpleClient.sendMessage(queueUrl, messageBody, messageAttributes)
+      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
+        simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value, messageAttributes)
     }
 
   /** Constructs a `RefinedSqsClient` using an underlying synchronous client backend.
     *
-    * @param awsRegion
+    * @param region
     *   The AWS region you are operating in.
     * @return
     *   A `RefinedSqsClient` instance using a synchronous backend.
     */
-  def sync[F[_]: Sync](region: Region) =
+  def sync[F[_]: Sync](region: Region): Resource[F, RefinedSqsClient[F]] =
     PureSqsClient.sync[F](region).map(apply[F])
 
   /** Constructs a `RefinedSqsClient` using an underlying asynchronous client backend.
     *
-    * @param awsRegion
+    * @param region
     *   The AWS region you are operating in.
     * @return
     *   A `RefinedSqsClient` instance using an asynchronous backend.
     */
-  def async[F[_]: Async](region: Region) =
+  def async[F[_]: Async](region: Region): Resource[F, RefinedSqsClient[F]] =
     PureSqsClient.async[F](region).map(apply[F])
 }

@@ -4,7 +4,6 @@ import cats._
 import cats.syntax.all._
 import cats.effect.Temporal
 import fs2.Stream
-import software.amazon.awssdk.services.sqs.model.MessageAttributeValue
 
 import scala.concurrent.duration.FiniteDuration
 
@@ -88,10 +87,3 @@ final case class SqsMessageWithAttributes[F[_]](
     attributes: MessageAttributes
 ) extends BaseSqsMessage[F, Int]
     with WithAttributes
-
-/** A message received from AWS SQS, with customer message attributes. */
-final case class SqsMessageWithCustomAttributes[F[_]](
-    body: String,
-    receiptHandle: ReceiptHandle[F],
-    attributes: Map[String, MessageAttributeValue]
-) extends BaseSqsMessage[F, Int]
