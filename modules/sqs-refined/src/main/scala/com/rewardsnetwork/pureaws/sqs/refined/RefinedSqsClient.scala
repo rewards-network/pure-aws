@@ -36,6 +36,15 @@ trait RefinedSqsClient[F[_]] {
   /** Delete a message given you have its receipt handle. */
   def deleteMessage(receiptHandle: RefinedReceiptHandle[F]): F[Unit]
 
+  /** Send a message to an SQS queue. Message delay is determined by the queue settings.
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String
+  ): F[String]
+
   /** Send a message with attributes to an SQS queue. Message delay is determined by the queue settings.
     * @return
     *   The message ID string of the sent message.
@@ -44,6 +53,16 @@ trait RefinedSqsClient[F[_]] {
       queueUrl: String,
       messageBody: String,
       messageAttributes: Map[String, MessageAttributeValue]
+  ): F[String]
+
+  /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message.
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      delaySeconds: Int Refined DelaySeconds
   ): F[String]
 
   /** Sends a message with attributes to an SQS queue. Allows specifying the seconds to delay the message.
@@ -112,8 +131,14 @@ object RefinedSqsClient {
       def deleteMessage(receiptHandle: RefinedReceiptHandle[F]): F[Unit] =
         simpleClient.deleteMessage(receiptHandle.rawReceiptHandle, receiptHandle.queueUrl)
 
+      def sendMessage(queueUrl: String, messageBody: String): F[String] =
+        simpleClient.sendMessage(queueUrl, messageBody)
+
       def sendMessage(queueUrl: String, messageBody: String, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, messageAttributes)
+
+      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String] =
+        simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
 
       def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value, messageAttributes)
