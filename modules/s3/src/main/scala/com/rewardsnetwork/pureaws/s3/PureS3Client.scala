@@ -213,10 +213,13 @@ object PureS3Client {
     *
     * @param client
     *   An asynchronous `S3AsyncClient` directly from the AWS SDK.
+    * @param bufferSize
+    *   Optional parameter to tweak throughput. Higher numbers than 1 mean requesting more elements at a time, while
+    *   using more memory.
     * @return
     *   A shiny new `PureS3Client` with an asynchronous backend.
     */
-  def apply[F[_]: Async](client: S3AsyncClient) =
+  def apply[F[_]: Async](client: S3AsyncClient, bufferSize: Int = 1) =
     new PureS3Client[F] {
       private def lift[A](f: => CompletableFuture[A]): F[A] = Async[F].fromCompletableFuture(Sync[F].delay(f))
 
@@ -239,7 +242,7 @@ object PureS3Client {
       def getObjectStream(r: GetObjectRequest): Stream[F, Byte] =
         Stream
           .eval(lift {
-            val transformer = Fs2AsyncResponseTransformer[F, GetObjectResponse]
+            val transformer = Fs2AsyncResponseTransformer[F, GetObjectResponse](bufferSize)
             client.getObject(r, transformer)
           })
           .flatMap(_._2)
@@ -298,20 +301,26 @@ object PureS3Client {
     *
     * @param awsRegion
     *   The AWS region you are operating in.
+    * @param bufferSize
+    *   Optional parameter to tweak throughput. Higher numbers than 1 mean requesting more elements at a time, while
+    *   using more memory.
     * @return
     *   A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def async[F[_]: Async](awsRegion: Region): Resource[F, PureS3Client[F]] =
-    S3ClientBackend.async[F](awsRegion)().map(apply[F])
+  def async[F[_]: Async](awsRegion: Region, bufferSize: Int = 1): Resource[F, PureS3Client[F]] =
+    S3ClientBackend.async[F](awsRegion)().map(apply[F](_, bufferSize))
 
   /** Creates a `PureS3Client` using an asynchronous backend with default settings. This variant allows for creating the
     * client with a different effect type than the `Resource` it is provided in.
     *
     * @param awsRegion
     *   The AWS region you are operating in.
+    * @param bufferSize
+    *   Optional parameter to tweak throughput. Higher numbers than 1 mean requesting more elements at a time, while
+    *   using more memory.
     * @return
     *   A `Resource` containing a `PureS3Client` using an asynchronous backend.
     */
-  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region): Resource[F, PureS3Client[G]] =
-    S3ClientBackend.async[F](awsRegion)().map(apply[G])
+  def asyncIn[F[_]: Sync, G[_]: Async](awsRegion: Region, bufferSize: Int = 1): Resource[F, PureS3Client[G]] =
+    S3ClientBackend.async[F](awsRegion)().map(apply[G](_, bufferSize))
 }

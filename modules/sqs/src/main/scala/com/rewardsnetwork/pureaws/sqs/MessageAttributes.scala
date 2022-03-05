@@ -1,7 +1,7 @@
 package com.rewardsnetwork.pureaws.sqs
 
 import com.rewardsnetwork.pureaws.compat.Conversions._
-import software.amazon.awssdk.services.sqs.model.MessageSystemAttributeName
+import software.amazon.awssdk.services.sqs.model.{MessageAttributeValue, MessageSystemAttributeName}
 
 final case class MessageAttributes(
     approximateReceiveCount: Option[Int],
@@ -10,11 +10,12 @@ final case class MessageAttributes(
     messageGroupId: Option[String],
     senderId: Option[String],
     sentTimestampEpochMillis: Option[Long],
-    sequenceNumber: Option[Long]
+    sequenceNumber: Option[Long],
+    other: Map[String, MessageAttributeValue]
 )
 
 object MessageAttributes {
-  def fromMap(m: Map[MessageSystemAttributeName, String]): MessageAttributes = {
+  def fromMap(m: Map[MessageSystemAttributeName, String], other: Map[String, MessageAttributeValue]): MessageAttributes = {
     import MessageSystemAttributeName._
     val approxReceiveCount = m.get(APPROXIMATE_RECEIVE_COUNT).flatMap(toIntOption)
     val approxFirstReceiveTimestamp = m.get(APPROXIMATE_FIRST_RECEIVE_TIMESTAMP).flatMap(toLongOption)
@@ -31,7 +32,8 @@ object MessageAttributes {
       groupId,
       senderId,
       sentTimestamp,
-      sequenceNumber
+      sequenceNumber,
+      other
     )
   }
 }
