@@ -21,7 +21,8 @@ class Fs2AsyncResponseTransformerSpec extends CatsEffectSuite with ScalaCheckEff
       val fs2publisher = fs2.Stream.emit[IO, ByteBuffer](exampleStrByteBuf).toUnicastPublisher
 
       fs2publisher.use { p =>
-        val transformer = Fs2AsyncResponseTransformer[IO, String]
+        val bufferSize = 1
+        val transformer = Fs2AsyncResponseTransformer[IO, String](bufferSize)
         val sdkPublisher = SdkPublishers.envelopeWrappedPublisher(p, "", "")
         val prep = IO {
           val cf = transformer.prepare

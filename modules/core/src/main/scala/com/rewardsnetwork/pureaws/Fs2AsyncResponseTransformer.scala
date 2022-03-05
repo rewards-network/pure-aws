@@ -20,8 +20,11 @@ trait Fs2AsyncResponseTransformer[F[_], A] extends AsyncResponseTransformer[A, (
 
 object Fs2AsyncResponseTransformer {
 
-  /** Creates an `Fs2AsyncResponseTransformer` that returns your response object as well as a stream of bytes. */
-  def apply[F[_]: Async, A]: Fs2AsyncResponseTransformer[F, A] =
+  /** Creates an `Fs2AsyncResponseTransformer` that returns your response object as well as a stream of bytes. Takes an
+    * optional `bufferSize` that can be used to tweak throughput at the expense of memory. A higher number means more
+    * elements are requested at once from the internal publisher.
+    */
+  def apply[F[_]: Async, A](bufferSize: Int = 1): Fs2AsyncResponseTransformer[F, A] =
     new Fs2AsyncResponseTransformer[F, A] {
 
       private val cf: CompletableFuture[Stream[F, Byte]] = new CompletableFuture[Stream[F, Byte]]()
@@ -38,7 +41,7 @@ object Fs2AsyncResponseTransformer {
 
       def onStream(x: SdkPublisher[ByteBuffer]): Unit = {
         val publish = fs2.interop.reactivestreams
-          .fromPublisher[F, ByteBuffer](x)
+          .fromPublisher[F, ByteBuffer](x, bufferSize)
           .map(Chunk.byteBuffer)
           .flatMap(Stream.chunk)
         val _ = cf.complete(publish)
