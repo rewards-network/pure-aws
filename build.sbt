@@ -48,7 +48,7 @@ inThisBuild(
     ),
     homepage := Some(url("https://github.com/rewards-network/pure-aws")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    githubWorkflowJavaVersions := Seq("adopt@1.8"),
+    githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11")),
     githubWorkflowTargetTags ++= Seq("v*"),
     githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
     githubWorkflowPublish := Seq(
