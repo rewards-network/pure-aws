@@ -1,11 +1,11 @@
 //Core deps
-val amazonV = "2.17.38"
-val catsV = "2.6.1"
-val catsEffectV = "3.2.8"
-val fs2V = "3.1.2"
+val amazonV = "2.17.143"
+val catsV = "2.7.0"
+val catsEffectV = "3.3.6"
+val fs2V = "3.2.5"
 val log4catsV = "1.2.0"
-val refinedV = "0.9.25"
-val collectionCompatV = "2.5.0"
+val refinedV = "0.9.28"
+val collectionCompatV = "2.6.0"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
 val catsEffect = "org.typelevel" %% "cats-effect-std" % catsEffectV
@@ -21,9 +21,9 @@ val collectionCompat =
 
 //Test/build deps
 val munitV = "0.7.29"
-val munitCatsEffectV = "1.0.5"
+val munitCatsEffectV = "1.0.7"
 val scalaCheckV = "1.15.4"
-val scalaCheckEffectV = "1.0.2"
+val scalaCheckEffectV = "1.0.3"
 
 val catsEffectLaws =
   "org.typelevel" %% "cats-effect-laws" % catsEffectV % "test"
@@ -37,7 +37,7 @@ val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheck
 //Scala versions supported
 val scala213 = "2.13.6"
 val scala212 = "2.12.13"
-val scala3 = "3.0.2"
+val scala3 = "3.1.1"
 
 // Project setup
 inThisBuild(
@@ -48,7 +48,7 @@ inThisBuild(
     ),
     homepage := Some(url("https://github.com/rewards-network/pure-aws")),
     licenses := List("Apache-2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0")),
-    githubWorkflowJavaVersions := Seq("adopt@1.8"),
+    githubWorkflowJavaVersions := Seq(JavaSpec.temurin("11")),
     githubWorkflowTargetTags ++= Seq("v*"),
     githubWorkflowPublishTargetBranches := Seq(RefPredicate.StartsWith(Ref.Tag("v"))),
     githubWorkflowPublish := Seq(
@@ -83,7 +83,7 @@ lazy val core = (project in file("modules/core"))
       collectionCompat,
       fs2Core,
       fs2ReactiveStreams,
-      //Test deps
+      // Test deps
       munitCatsEffect,
       munitScalacheck,
       scalaCheck,
@@ -95,9 +95,9 @@ lazy val sqs = (project in file("modules/sqs"))
   .settings(
     name := "pure-aws-sqs",
     libraryDependencies ++= Seq(
-      //Core deps
+      // Core deps
       awsSQS,
-      //Test deps
+      // Test deps
       catsEffectLaws
     )
   )
@@ -123,10 +123,10 @@ lazy val s3 = (project in file("modules/s3"))
   .settings(
     name := "pure-aws-s3",
     libraryDependencies ++= Seq(
-      //Core deps
+      // Core deps
       awsS3,
       fs2Io,
-      //Test deps
+      // Test deps
       catsEffectLaws
     ),
     Compile / doc / sources := {

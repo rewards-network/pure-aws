@@ -45,15 +45,43 @@ trait SimpleSqsClient[F[_]] {
     * @return
     *   The message ID string of the sent message.
     */
-  def sendMessage(queueUrl: String, messageBody: String): F[String]
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String
+  ): F[String]
 
-  /** Sends a message to an SQS queue. Allows specifying the seconds to delay the message (valid values between 0 and
-    * 900).
+  /** Send a message with attributes to an SQS queue. Message delay is determined by the queue settings.
     * @return
     *   The message ID string of the sent message.
     */
-  def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int): F[String]
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      messageAttributes: Map[String, MessageAttributeValue]
+  ): F[String]
 
+  /** Send a message to an SQS queue. Allows specifying the seconds to delay the message (valid values
+    * between 0 and 900).
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      delaySeconds: Int
+  ): F[String]
+
+ /** Send a message with attributes to an SQS queue. Allows specifying the seconds to delay the message (valid values
+    * between 0 and 900).
+    * @return
+    *   The message ID string of the sent message.
+    */
+  def sendMessage(
+      queueUrl: String,
+      messageBody: String,
+      delaySeconds: Int,
+      messageAttributes: Map[String, MessageAttributeValue]
+  ): F[String]
 }
 
 object SimpleSqsClient {
@@ -76,10 +104,10 @@ object SimpleSqsClient {
       .receiveMessageStream(reqWithMaybeAttrs)
       .flatMap[F, Message](res =>
         Stream.fromIterator[F](res.messages.iterator.asScala, 1024)
-      ) //TODO: make the chunk size configurable
+      ) // TODO: make the chunk size configurable
   }
 
-  def apply[F[_]: Sync](client: PureSqsClient[F]) =
+  def apply[F[_]: Sync](client: PureSqsClient[F]): SimpleSqsClient[F] =
     new SimpleSqsClient[F] {
 
       def streamMessages(
@@ -104,7 +132,10 @@ object SimpleSqsClient {
           settings.waitTimeSeconds,
           receiveAttrs = true
         ).map { m =>
-          val attributes = MessageAttributes.fromMap(m.attributes().asScala.toMap)
+          val attributes = MessageAttributes.fromMap(
+            m.attributes().asScala.toMap,
+            m.messageAttributes().asScala.toMap
+          )
           SqsMessageWithAttributes(m.body, ReceiptHandle(m.receiptHandle, queueUrl, this), attributes)
         }
       }
@@ -127,18 +158,48 @@ object SimpleSqsClient {
         client.deleteMessage(req).void
       }
 
-      def sendMessage(queueUrl: String, messageBody: String): F[String] = {
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String
+      ): F[String] = sendMessage(queueUrl, messageBody, Map.empty[String, MessageAttributeValue])
+
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          messageAttributes: Map[String, MessageAttributeValue]
+      ): F[String] = {
         val req =
-          SendMessageRequest.builder.queueUrl(queueUrl).messageBody(messageBody).build()
+          SendMessageRequest.builder
+            .queueUrl(queueUrl)
+            .messageBody(messageBody)
+            .messageAttributes(messageAttributes.asJava)
+            .build()
         client.sendMessage(req).map(_.messageId)
       }
 
-      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int): F[String] = {
-        val req =
-          SendMessageRequest.builder.queueUrl(queueUrl).messageBody(messageBody).delaySeconds(delaySeconds).build()
-        client.sendMessage(req).map(_.messageId)
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          delaySeconds: Int,
+      ): F[String] = {
+        sendMessage(queueUrl, messageBody, delaySeconds, Map.empty[String, MessageAttributeValue])
       }
 
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          delaySeconds: Int,
+          messageAttributes: Map[String, MessageAttributeValue]
+      ): F[String] = {
+        val req =
+          SendMessageRequest.builder
+            .queueUrl(queueUrl)
+            .messageBody(messageBody)
+            .messageAttributes(messageAttributes.asJava)
+            .delaySeconds(delaySeconds)
+            .build()
+        client.sendMessage(req).map(_.messageId)
+      }
     }
 
   /** Constructs a `SimpleSqsClient` using an underlying synchronous client backend.
