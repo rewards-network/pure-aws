@@ -4,6 +4,7 @@ import cats.syntax.all._
 import cats.effect._
 import fs2.Stream
 import software.amazon.awssdk.regions.Region
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName.ALL
 import software.amazon.awssdk.services.sqs.model._
 
 import scala.jdk.CollectionConverters._
@@ -98,7 +99,7 @@ object SimpleSqsClient {
       .visibilityTimeout(visibilityTimeoutSeconds)
       .waitTimeSeconds(waitTimeSeconds)
 
-    val reqWithMaybeAttrs = (if (receiveAttrs) req.attributeNames(QueueAttributeName.ALL) else req).build
+    val reqWithMaybeAttrs = (if (receiveAttrs) req.attributeNames(ALL).messageAttributeNames(ALL.toString) else req).build
 
     client
       .receiveMessageStream(reqWithMaybeAttrs)

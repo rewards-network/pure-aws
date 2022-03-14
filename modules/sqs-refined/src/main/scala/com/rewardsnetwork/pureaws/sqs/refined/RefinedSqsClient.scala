@@ -103,7 +103,8 @@ object RefinedSqsClient {
             queueUrl,
             settings.maxMessages.value,
             settings.visibilityTimeoutSeconds.value,
-            settings.waitTimeSeconds.value
+            settings.waitTimeSeconds.value,
+            receiveAttrs = true
           )
           .map { m =>
             val attributes = MessageAttributes.fromMap(
