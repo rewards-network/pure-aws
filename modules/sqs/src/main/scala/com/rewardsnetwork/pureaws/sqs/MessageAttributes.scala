@@ -15,7 +15,10 @@ final case class MessageAttributes(
 )
 
 object MessageAttributes {
-  def fromMap(m: Map[MessageSystemAttributeName, String], other: Map[String, MessageAttributeValue]): MessageAttributes = {
+  def fromMap(
+      m: Map[MessageSystemAttributeName, String],
+      other: Map[String, MessageAttributeValue]
+  ): MessageAttributes = {
     import MessageSystemAttributeName._
     val approxReceiveCount = m.get(APPROXIMATE_RECEIVE_COUNT).flatMap(toIntOption)
     val approxFirstReceiveTimestamp = m.get(APPROXIMATE_FIRST_RECEIVE_TIMESTAMP).flatMap(toLongOption)
