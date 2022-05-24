@@ -23,7 +23,7 @@ val collectionCompat =
 val munitV = "0.7.29"
 val munitCatsEffectV = "1.0.7"
 val scalaCheckV = "1.16.0"
-val scalaCheckEffectV = "1.0.3"
+val scalaCheckEffectV = "1.0.4"
 
 val catsEffectLaws =
   "org.typelevel" %% "cats-effect-laws" % catsEffectV % "test"
