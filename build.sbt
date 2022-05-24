@@ -2,9 +2,9 @@
 val amazonV = "2.17.143"
 val catsV = "2.7.0"
 val catsEffectV = "3.3.12"
-val fs2V = "3.2.5"
+val fs2V = "3.2.7"
 val log4catsV = "1.2.0"
-val refinedV = "0.9.28"
+val refinedV = "0.9.29"
 val collectionCompatV = "2.6.0"
 
 val catsCore = "org.typelevel" %% "cats-core" % catsV
@@ -22,7 +22,7 @@ val collectionCompat =
 //Test/build deps
 val munitV = "0.7.29"
 val munitCatsEffectV = "1.0.7"
-val scalaCheckV = "1.15.4"
+val scalaCheckV = "1.16.0"
 val scalaCheckEffectV = "1.0.3"
 
 val catsEffectLaws =
