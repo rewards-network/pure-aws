@@ -61,8 +61,8 @@ trait SimpleSqsClient[F[_]] {
       messageAttributes: Map[String, MessageAttributeValue]
   ): F[String]
 
-  /** Send a message to an SQS queue. Allows specifying the seconds to delay the message (valid values
-    * between 0 and 900).
+  /** Send a message to an SQS queue. Allows specifying the seconds to delay the message (valid values between 0 and
+    * 900).
     * @return
     *   The message ID string of the sent message.
     */
@@ -72,7 +72,7 @@ trait SimpleSqsClient[F[_]] {
       delaySeconds: Int
   ): F[String]
 
- /** Send a message with attributes to an SQS queue. Allows specifying the seconds to delay the message (valid values
+  /** Send a message with attributes to an SQS queue. Allows specifying the seconds to delay the message (valid values
     * between 0 and 900).
     * @return
     *   The message ID string of the sent message.
@@ -181,7 +181,7 @@ object SimpleSqsClient {
       def sendMessage(
           queueUrl: String,
           messageBody: String,
-          delaySeconds: Int,
+          delaySeconds: Int
       ): F[String] = {
         sendMessage(queueUrl, messageBody, delaySeconds, Map.empty[String, MessageAttributeValue])
       }

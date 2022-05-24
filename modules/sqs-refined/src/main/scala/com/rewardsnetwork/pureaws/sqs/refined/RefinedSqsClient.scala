@@ -135,13 +135,22 @@ object RefinedSqsClient {
       def sendMessage(queueUrl: String, messageBody: String): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody)
 
-      def sendMessage(queueUrl: String, messageBody: String, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          messageAttributes: Map[String, MessageAttributeValue]
+      ): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, messageAttributes)
 
       def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value)
 
-      def sendMessage(queueUrl: String, messageBody: String, delaySeconds: Int Refined DelaySeconds, messageAttributes: Map[String, MessageAttributeValue]): F[String] =
+      def sendMessage(
+          queueUrl: String,
+          messageBody: String,
+          delaySeconds: Int Refined DelaySeconds,
+          messageAttributes: Map[String, MessageAttributeValue]
+      ): F[String] =
         simpleClient.sendMessage(queueUrl, messageBody, delaySeconds.value, messageAttributes)
     }
 
