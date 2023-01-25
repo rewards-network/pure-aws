@@ -36,7 +36,7 @@ val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheck
 
 //Scala versions supported
 val scala213 = "2.13.6"
-val scala212 = "2.12.17"
+val scala212 = "2.12.13"
 val scala3 = "3.1.1"
 
 // Project setup
