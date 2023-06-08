@@ -99,7 +99,8 @@ object SimpleSqsClient {
       .visibilityTimeout(visibilityTimeoutSeconds)
       .waitTimeSeconds(waitTimeSeconds)
 
-    val reqWithMaybeAttrs = (if (receiveAttrs) req.attributeNames(ALL).messageAttributeNames(ALL.toString) else req).build
+    val reqWithMaybeAttrs =
+      (if (receiveAttrs) req.attributeNames(ALL).messageAttributeNames(ALL.toString) else req).build
 
     client
       .receiveMessageStream(reqWithMaybeAttrs)
