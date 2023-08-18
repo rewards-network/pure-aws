@@ -1,8 +1,8 @@
 //Core deps
-val amazonV = "2.17.295"
+val amazonV = "2.20.129"
 val catsV = "2.7.0"
 val catsEffectV = "3.3.12"
-val fs2V = "3.2.7"
+val fs2V = "3.2.14"
 val log4catsV = "1.2.0"
 val refinedV = "0.9.29"
 val collectionCompatV = "2.7.0"
@@ -37,7 +37,7 @@ val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheck
 //Scala versions supported
 val scala213 = "2.13.11"
 val scala212 = "2.12.13"
-val scala3 = "3.1.1"
+val scala3 = "3.1.3"
 
 // Project setup
 inThisBuild(
