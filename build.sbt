@@ -21,7 +21,7 @@ val collectionCompat =
 
 //Test/build deps
 val munitV = "0.7.29"
-val munitCatsEffectV = "1.0.7"
+val munitCatsEffectV = "2.0.0"
 val scalaCheckV = "1.16.0"
 val scalaCheckEffectV = "1.0.4"
 
@@ -29,7 +29,7 @@ val catsEffectLaws =
   "org.typelevel" %% "cats-effect-laws" % catsEffectV % "test"
 val log4catsTesting =
   "io.chrisdavenport" %% "log4cats-testing" % log4catsV % "test"
-val munitCatsEffect = "org.typelevel" %% "munit-cats-effect-3" % munitCatsEffectV % "test"
+val munitCatsEffect = "org.typelevel" %% "munit-cats-effect" % munitCatsEffectV % "test"
 val munitScalacheck = "org.scalameta" %% "munit-scalacheck" % munitV
 val scalaCheck = "org.scalacheck" %% "scalacheck" % scalaCheckV % "test"
 val scalaCheckEffect = "org.typelevel" %% "scalacheck-effect-munit" % scalaCheckEffectV % "test"
